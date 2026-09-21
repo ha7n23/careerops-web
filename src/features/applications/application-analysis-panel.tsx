@@ -100,11 +100,11 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
 
           <p
             aria-label={`Overall fit: ${Math.round(
-              data.analysis.fitScore * 100,
+              data.analysis.fitScore,
             )} percent`}
             className="mt-1 text-4xl font-semibold tracking-tight"
           >
-            {Math.round(data.analysis.fitScore * 100)}%
+            {Math.round(data.analysis.fitScore)}%
           </p>
 
           <p className="text-muted-foreground mt-3 text-sm leading-6">

@@ -24,7 +24,7 @@ export const module2ApplicationAnalysis = {
     thread_id: "THR-001",
     job_id: analysisApplicationId,
     role_title: "Graduate AI Engineer",
-    fit_score: 0.82,
+    fit_score: 82,
     requirements: [
       {
         requirement_id: "REQ-001",
@@ -82,7 +82,7 @@ export const applicationAnalysis = {
     threadId: "THR-001",
     jobId: analysisApplicationId,
     roleTitle: "Graduate AI Engineer",
-    fitScore: 0.82,
+    fitScore: 82,
     requirements: [
       {
         id: "REQ-001",

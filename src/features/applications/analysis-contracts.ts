@@ -73,7 +73,7 @@ const agentEngineAnalysisSchema = z.object({
   threadId: z.string().trim().min(1),
   jobId: z.string().trim().min(1),
   roleTitle: z.string().trim().min(1).nullable(),
-  fitScore: z.number().min(0).max(1),
+  fitScore: z.number().min(0).max(100),
   requirements: z.array(requirementSchema),
   evidenceMatches: z.array(evidenceMatchSchema),
   cvProposals: z.array(cvProposalSchema),
@@ -119,7 +119,7 @@ const module2AgentEngineAnalysisSchema = z
     thread_id: z.string().trim().min(1),
     job_id: z.string().trim().min(1),
     role_title: z.string().trim().min(1).nullable(),
-    fit_score: z.number().min(0).max(1),
+    fit_score: z.number().min(0).max(100),
     requirements: z.array(
       z.object({
         requirement_id: z.string().trim().min(1),
