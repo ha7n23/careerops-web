@@ -5,6 +5,11 @@ import {
   module2ApplicationListSchema,
   module2ApplicationSummarySchema,
 } from "@/features/applications/contracts";
+import { module2ApplicationAnalysisSchema } from "@/features/applications/analysis-contracts";
+import {
+  applicationAnalysis,
+  module2ApplicationAnalysis,
+} from "@/test/application-analysis-fixtures";
 
 const applicationResponse = {
   application_id: "9b52d879-79b6-4af4-a369-886b77f4bb6e",
@@ -63,5 +68,10 @@ describe("application contracts", () => {
     expect(applicationListSchema.parse(applicationList)).toEqual(
       applicationList,
     );
+  });
+  it("validates and converts Module 2 application analysis", () => {
+    expect(
+      module2ApplicationAnalysisSchema.parse(module2ApplicationAnalysis),
+    ).toEqual(applicationAnalysis);
   });
 });

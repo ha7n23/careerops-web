@@ -8,10 +8,22 @@ import {
   type ApplicationSummary,
 } from "@/features/applications/contracts";
 
+import {
+  module2ApplicationAnalysisSchema,
+  type ApplicationAnalysis,
+} from "@/features/applications/analysis-contracts";
+
 type ToolCallRequest = {
   name: string;
   arguments?: Record<string, unknown>;
 };
+
+export class ApplicationAnalysisUnavailableError extends Error {
+  constructor() {
+    super("Module 2 has no available analysis for this application.");
+    this.name = "ApplicationAnalysisUnavailableError";
+  }
+}
 
 export type McpToolCaller = {
   callTool(request: ToolCallRequest): Promise<unknown>;
@@ -64,4 +76,26 @@ export async function getApplicationFromMcp(
   }
 
   return module2ApplicationSummarySchema.parse(result.structuredContent);
+}
+
+export async function getApplicationAnalysisFromMcp(
+  client: McpToolCaller,
+  applicationId: string,
+): Promise<ApplicationAnalysis> {
+  const result = toolResultSchema.parse(
+    await client.callTool({
+      name: "get_application_analysis",
+      arguments: { application_id: applicationId },
+    }),
+  );
+
+  if (result.isError) {
+    throw new ApplicationAnalysisUnavailableError();
+  }
+
+  if (result.structuredContent === undefined) {
+    throw new Error("Module 2 returned no structured analysis data.");
+  }
+
+  return module2ApplicationAnalysisSchema.parse(result.structuredContent);
 }

@@ -1,9 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  ApplicationAnalysisUnavailableError,
+  getApplicationAnalysisFromMcp,
   getApplicationFromMcp,
   listApplicationsFromMcp,
 } from "@/features/applications/mcp";
+
+import {
+  analysisApplicationId,
+  applicationAnalysis,
+  module2ApplicationAnalysis,
+} from "@/test/application-analysis-fixtures";
 
 const applicationResponse = {
   application_id: "9b52d879-79b6-4af4-a369-886b77f4bb6e",
@@ -99,5 +107,34 @@ describe("getApplicationFromMcp", () => {
         "9b52d879-79b6-4af4-a369-886b77f4bb6e",
       ),
     ).rejects.toThrow("Module 2 could not get the application");
+  });
+});
+
+describe("getApplicationAnalysisFromMcp", () => {
+  it("calls Module 2 and returns validated analysis", async () => {
+    const callTool = vi.fn().mockResolvedValue({
+      structuredContent: module2ApplicationAnalysis,
+    });
+
+    await expect(
+      getApplicationAnalysisFromMcp({ callTool }, analysisApplicationId),
+    ).resolves.toEqual(applicationAnalysis);
+
+    expect(callTool).toHaveBeenCalledWith({
+      name: "get_application_analysis",
+      arguments: {
+        application_id: analysisApplicationId,
+      },
+    });
+  });
+
+  it("reports when an application has no available analysis", async () => {
+    const callTool = vi.fn().mockResolvedValue({
+      isError: true,
+    });
+
+    await expect(
+      getApplicationAnalysisFromMcp({ callTool }, analysisApplicationId),
+    ).rejects.toBeInstanceOf(ApplicationAnalysisUnavailableError);
   });
 });
