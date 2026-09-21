@@ -99,4 +99,32 @@ describe("ApplicationsPanel", () => {
     expect(screen.getByLabelText("Status: Ready to apply")).toBeInTheDocument();
     expect(screen.getByText("1 role")).toBeInTheDocument();
   });
+
+  it("requests applications using the selected status filter", async () => {
+    const user = userEvent.setup();
+
+    useApplicationsMock.mockReturnValue({
+      data: { applications: [], count: 0 },
+      isPending: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    render(<ApplicationsPanel />);
+
+    expect(useApplicationsMock).toHaveBeenLastCalledWith(undefined);
+
+    await user.selectOptions(
+      screen.getByRole("combobox", {
+        name: "Filter applications by status",
+      }),
+      "saved",
+    );
+
+    expect(useApplicationsMock).toHaveBeenLastCalledWith("saved");
+    expect(
+      screen.getByText("No applications match this status"),
+    ).toBeInTheDocument();
+  });
 });

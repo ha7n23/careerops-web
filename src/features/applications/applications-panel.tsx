@@ -1,10 +1,16 @@
 "use client";
 
 import { BriefcaseBusiness, RefreshCw } from "lucide-react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import type { ApplicationStatus } from "@/features/applications/contracts";
+import {
+  APPLICATION_STATUSES,
+  type ApplicationStatus,
+} from "@/features/applications/contracts";
 import { useApplications } from "@/features/applications/use-applications";
+
+type ApplicationStatusFilter = ApplicationStatus | "all";
 
 const STATUS_LABELS: Record<ApplicationStatus, string> = {
   saved: "Saved",
@@ -26,11 +32,18 @@ const dateFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 export function ApplicationsPanel() {
-  const { data, isPending, isError, isFetching, refetch } = useApplications();
+  const [statusFilter, setStatusFilter] =
+    useState<ApplicationStatusFilter>("all");
+
+  const selectedStatus = statusFilter === "all" ? undefined : statusFilter;
+
+  const { data, isPending, isError, isFetching, refetch } =
+    useApplications(selectedStatus);
 
   return (
     <section
       aria-labelledby="applications-heading"
+      aria-busy={isFetching}
       className="bg-card text-card-foreground overflow-hidden rounded-2xl border shadow-sm"
     >
       <div className="flex flex-col gap-4 border-b px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
@@ -43,6 +56,7 @@ export function ApplicationsPanel() {
             >
               Applications
             </h2>
+
             {data !== undefined && (
               <span className="text-muted-foreground text-sm">
                 {data.count} {data.count === 1 ? "role" : "roles"}
@@ -51,21 +65,48 @@ export function ApplicationsPanel() {
           </div>
         </div>
 
-        {data !== undefined && data.count > 0 && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isFetching}
-            onClick={() => void refetch()}
+        <div className="flex flex-wrap items-center gap-3">
+          <label
+            htmlFor="application-status-filter"
+            className="text-muted-foreground text-sm"
           >
-            <RefreshCw
-              aria-hidden="true"
-              className={isFetching ? "animate-spin" : undefined}
-            />
-            {isFetching ? "Refreshing" : "Refresh"}
-          </Button>
-        )}
+            Status
+          </label>
+
+          <select
+            id="application-status-filter"
+            aria-label="Filter applications by status"
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(event.target.value as ApplicationStatusFilter)
+            }
+            className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
+          >
+            <option value="all">All statuses</option>
+
+            {APPLICATION_STATUSES.map((status) => (
+              <option key={status} value={status}>
+                {STATUS_LABELS[status]}
+              </option>
+            ))}
+          </select>
+
+          {data !== undefined && data.count > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isFetching}
+              onClick={() => void refetch()}
+            >
+              <RefreshCw
+                aria-hidden="true"
+                className={isFetching ? "animate-spin" : undefined}
+              />
+              {isFetching ? "Refreshing" : "Refresh"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="p-6">
@@ -77,7 +118,7 @@ export function ApplicationsPanel() {
             onRetry={() => void refetch()}
           />
         ) : data.count === 0 ? (
-          <ApplicationsEmpty />
+          <ApplicationsEmpty isFiltered={selectedStatus !== undefined} />
         ) : (
           <ul aria-label="Applications" className="space-y-3">
             {data.applications.map((application) => (
@@ -98,6 +139,7 @@ export function ApplicationsPanel() {
                       Updated{" "}
                       {dateFormatter.format(new Date(application.updatedAt))}
                     </time>
+
                     <span
                       aria-label={`Status: ${STATUS_LABELS[application.status]}`}
                       className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium"
@@ -119,6 +161,7 @@ function ApplicationsLoading() {
   return (
     <div role="status" aria-label="Loading applications" className="space-y-3">
       <span className="sr-only">Loading applications…</span>
+
       {[0, 1, 2].map((item) => (
         <div
           key={item}
@@ -148,6 +191,7 @@ function ApplicationsError({
           Check that the CareerOps services are running, then try again.
         </p>
       </div>
+
       <Button
         type="button"
         variant="outline"
@@ -164,7 +208,7 @@ function ApplicationsError({
   );
 }
 
-function ApplicationsEmpty() {
+function ApplicationsEmpty({ isFiltered }: { isFiltered: boolean }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-dashed px-6 py-12 text-center">
       <div className="bg-muted rounded-full p-3">
@@ -173,9 +217,17 @@ function ApplicationsEmpty() {
           className="text-muted-foreground size-5"
         />
       </div>
-      <h3 className="mt-4 font-medium">No applications yet</h3>
+
+      <h3 className="mt-4 font-medium">
+        {isFiltered
+          ? "No applications match this status"
+          : "No applications yet"}
+      </h3>
+
       <p className="text-muted-foreground mt-1 max-w-sm text-sm leading-6">
-        Applications created through CareerOps will appear here.
+        {isFiltered
+          ? "Choose another status to see the rest of your pipeline."
+          : "Applications created through CareerOps will appear here."}
       </p>
     </div>
   );
