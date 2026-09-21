@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   ApplicationsApiError,
+  fetchApplication,
   fetchApplications,
 } from "@/features/applications/browser-api";
 
@@ -83,5 +84,27 @@ describe("fetchApplications", () => {
       code: "INVALID_RESPONSE",
       message: "CareerOps returned an invalid response.",
     });
+  });
+});
+
+describe("fetchApplication", () => {
+  it("requests and validates one application from the internal API", async () => {
+    const application = applicationList.applications[0];
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(application));
+    const controller = new AbortController();
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      fetchApplication(application.id, controller.signal),
+    ).resolves.toEqual(application);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/applications/${application.id}`,
+      {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      },
+    );
   });
 });

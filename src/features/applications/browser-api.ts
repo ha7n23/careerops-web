@@ -2,8 +2,10 @@ import { z } from "zod";
 
 import {
   applicationListSchema,
+  applicationSummarySchema,
   type ApplicationList,
   type ApplicationStatus,
+  type ApplicationSummary,
 } from "@/features/applications/contracts";
 
 const apiErrorSchema = z.object({
@@ -35,13 +37,34 @@ export async function fetchApplications(
   }
 
   const query = searchParams.toString();
-  const response = await fetch(
+
+  return requestCareerOpsApi(
     `/api/applications${query === "" ? "" : `?${query}`}`,
-    {
-      headers: { Accept: "application/json" },
-      signal,
-    },
+    applicationListSchema,
+    signal,
   );
+}
+
+export async function fetchApplication(
+  applicationId: string,
+  signal?: AbortSignal,
+): Promise<ApplicationSummary> {
+  return requestCareerOpsApi(
+    `/api/applications/${encodeURIComponent(applicationId)}`,
+    applicationSummarySchema,
+    signal,
+  );
+}
+
+async function requestCareerOpsApi<Result>(
+  url: string,
+  schema: z.ZodType<Result>,
+  signal?: AbortSignal,
+): Promise<Result> {
+  const response = await fetch(url, {
+    headers: { Accept: "application/json" },
+    signal,
+  });
 
   let body: unknown;
 
@@ -67,9 +90,9 @@ export async function fetchApplications(
     );
   }
 
-  const parsedApplications = applicationListSchema.safeParse(body);
+  const parsedResult = schema.safeParse(body);
 
-  if (!parsedApplications.success) {
+  if (!parsedResult.success) {
     throw new ApplicationsApiError(
       "CareerOps returned an invalid response.",
       response.status,
@@ -77,5 +100,5 @@ export async function fetchApplications(
     );
   }
 
-  return parsedApplications.data;
+  return parsedResult.data;
 }
