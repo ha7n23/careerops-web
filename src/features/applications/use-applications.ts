@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  createApplication,
   fetchApplication,
   fetchApplicationAnalysis,
   fetchApplications,
@@ -23,6 +24,24 @@ export function useApplications(status?: ApplicationStatus) {
   return useQuery({
     queryKey: applicationQueryKeys.list(status),
     queryFn: ({ signal }) => fetchApplications(status, signal),
+  });
+}
+
+export function useCreateApplication() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createApplication,
+    onSuccess: async (application) => {
+      queryClient.setQueryData(
+        applicationQueryKeys.detail(application.id),
+        application,
+      );
+
+      await queryClient.invalidateQueries({
+        queryKey: applicationQueryKeys.all,
+      });
+    },
   });
 }
 

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   ApplicationsApiError,
+  createApplication,
   fetchApplication,
   fetchApplicationAnalysis,
   fetchApplications,
@@ -135,5 +136,35 @@ describe("fetchApplicationAnalysis", () => {
         signal: controller.signal,
       },
     );
+  });
+});
+
+describe("createApplication", () => {
+  it("posts and validates a new application", async () => {
+    const application = applicationList.applications[0];
+    const input = {
+      companyName: "Example Bank",
+      roleTitle: "Graduate AI Engineer",
+      idempotencyKey: "create-001",
+    };
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json(application, {
+        status: 201,
+      }),
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(createApplication(input)).resolves.toEqual(application);
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+      signal: undefined,
+    });
   });
 });

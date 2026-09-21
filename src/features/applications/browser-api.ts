@@ -11,6 +11,7 @@ import {
   type ApplicationList,
   type ApplicationStatus,
   type ApplicationSummary,
+  type CreateApplicationRequest,
 } from "@/features/applications/contracts";
 
 const apiErrorSchema = z.object({
@@ -72,15 +73,45 @@ export async function fetchApplicationAnalysis(
   );
 }
 
+export async function createApplication(
+  input: CreateApplicationRequest,
+): Promise<ApplicationSummary> {
+  return requestCareerOpsApi(
+    "/api/applications",
+    applicationSummarySchema,
+    undefined,
+    { method: "POST", body: input },
+  );
+}
+
+type ApiRequestOptions = {
+  method: "POST";
+  body: unknown;
+};
+
 async function requestCareerOpsApi<Result>(
   url: string,
   schema: z.ZodType<Result>,
   signal?: AbortSignal,
+  options?: ApiRequestOptions,
 ): Promise<Result> {
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
-    signal,
-  });
+  const response = await fetch(
+    url,
+    options === undefined
+      ? {
+          headers: { Accept: "application/json" },
+          signal,
+        }
+      : {
+          method: options.method,
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(options.body),
+          signal,
+        },
+  );
 
   let body: unknown;
 

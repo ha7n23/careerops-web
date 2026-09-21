@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowRight, BriefcaseBusiness, RefreshCw } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Plus, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { CreateApplicationForm } from "@/features/applications/create-application-form";
 import {
   APPLICATION_STATUSES,
   type ApplicationStatus,
@@ -18,6 +19,10 @@ import { useApplications } from "@/features/applications/use-applications";
 type ApplicationStatusFilter = ApplicationStatus | "all";
 
 export function ApplicationsPanel() {
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [creationAnnouncement, setCreationAnnouncement] = useState<
+    string | null
+  >(null);
   const [statusFilter, setStatusFilter] =
     useState<ApplicationStatusFilter>("all");
 
@@ -35,6 +40,7 @@ export function ApplicationsPanel() {
       <div className="flex flex-col gap-4 border-b px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-muted-foreground text-sm">Your pipeline</p>
+
           <div className="mt-1 flex items-baseline gap-3">
             <h2
               id="applications-heading"
@@ -52,6 +58,18 @@ export function ApplicationsPanel() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => {
+              setCreationAnnouncement(null);
+              setIsCreateFormOpen((isOpen) => !isOpen);
+            }}
+          >
+            <Plus aria-hidden="true" />
+            {isCreateFormOpen ? "Close form" : "Add application"}
+          </Button>
+
           <label
             htmlFor="application-status-filter"
             className="text-muted-foreground text-sm"
@@ -95,7 +113,29 @@ export function ApplicationsPanel() {
         </div>
       </div>
 
+      {isCreateFormOpen && (
+        <CreateApplicationForm
+          onCancel={() => setIsCreateFormOpen(false)}
+          onCreated={(application) => {
+            setStatusFilter("all");
+            setIsCreateFormOpen(false);
+            setCreationAnnouncement(
+              `${application.roleTitle} at ${application.companyName} was added.`,
+            );
+          }}
+        />
+      )}
+
       <div className="p-6">
+        {creationAnnouncement !== null && (
+          <p
+            role="status"
+            className="border-border bg-muted/40 mb-5 rounded-lg border px-4 py-3 text-sm"
+          >
+            {creationAnnouncement}
+          </p>
+        )}
+
         {isPending ? (
           <ApplicationsLoading />
         ) : isError ? (

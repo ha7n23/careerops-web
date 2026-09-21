@@ -9,6 +9,9 @@ const { useApplicationsMock } = vi.hoisted(() => ({
 vi.mock("@/features/applications/use-applications", () => ({
   useApplications: useApplicationsMock,
 }));
+vi.mock("@/features/applications/create-application-form", () => ({
+  CreateApplicationForm: () => <div>Add application form</div>,
+}));
 
 import { ApplicationsPanel } from "@/features/applications/applications-panel";
 
@@ -69,6 +72,28 @@ describe("ApplicationsPanel", () => {
 
     expect(screen.getByText("No applications yet")).toBeInTheDocument();
     expect(screen.getByText("0 roles")).toBeInTheDocument();
+  });
+
+  it("opens and closes the add-application form", async () => {
+    const user = userEvent.setup();
+
+    useApplicationsMock.mockReturnValue({
+      data: { applications: [], count: 0 },
+      isPending: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    render(<ApplicationsPanel />);
+
+    await user.click(screen.getByRole("button", { name: "Add application" }));
+
+    expect(screen.getByText("Add application form")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Close form" }));
+
+    expect(screen.queryByText("Add application form")).not.toBeInTheDocument();
   });
 
   it("renders applications and their human-readable status", () => {
