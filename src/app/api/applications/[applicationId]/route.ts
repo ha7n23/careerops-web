@@ -1,8 +1,6 @@
-import { z } from "zod";
+import { applicationIdSchema } from "@/features/applications/contracts";
 
 import { getApplication } from "@/features/applications/server";
-
-const applicationIdSchema = z.string().uuid();
 
 const responseHeaders = {
   "Cache-Control": "private, no-store",

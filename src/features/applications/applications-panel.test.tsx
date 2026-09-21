@@ -98,6 +98,12 @@ describe("ApplicationsPanel", () => {
     expect(screen.getByText("Example Bank")).toBeInTheDocument();
     expect(screen.getByLabelText("Status: Ready to apply")).toBeInTheDocument();
     expect(screen.getByText("1 role")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Graduate AI Engineer/ }),
+    ).toHaveAttribute(
+      "href",
+      "/applications/9b52d879-79b6-4af4-a369-886b77f4bb6e",
+    );
   });
 
   it("requests applications using the selected status filter", async () => {

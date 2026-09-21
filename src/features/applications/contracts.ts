@@ -13,9 +13,10 @@ export const APPLICATION_STATUSES = [
 ] as const;
 
 export const applicationStatusSchema = z.enum(APPLICATION_STATUSES);
+export const applicationIdSchema = z.string().uuid();
 
 export const applicationSummarySchema = z.object({
-  id: z.string().uuid(),
+  id: applicationIdSchema,
   companyName: z.string().trim().min(1),
   roleTitle: z.string().trim().min(1),
   status: applicationStatusSchema,
@@ -35,7 +36,7 @@ export const applicationListSchema = z
 
 export const module2ApplicationSummarySchema = z
   .object({
-    application_id: z.string().uuid(),
+    application_id: applicationIdSchema,
     company_name: z.string().trim().min(1),
     role_title: z.string().trim().min(1),
     status: applicationStatusSchema,

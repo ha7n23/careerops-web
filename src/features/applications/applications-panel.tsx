@@ -1,6 +1,7 @@
 "use client";
 
-import { BriefcaseBusiness, RefreshCw } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, RefreshCw } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -8,28 +9,13 @@ import {
   APPLICATION_STATUSES,
   type ApplicationStatus,
 } from "@/features/applications/contracts";
+import {
+  APPLICATION_STATUS_LABELS,
+  formatApplicationDate,
+} from "@/features/applications/presentation";
 import { useApplications } from "@/features/applications/use-applications";
 
 type ApplicationStatusFilter = ApplicationStatus | "all";
-
-const STATUS_LABELS: Record<ApplicationStatus, string> = {
-  saved: "Saved",
-  preparing: "Preparing",
-  ready_to_apply: "Ready to apply",
-  applied: "Applied",
-  interviewing: "Interviewing",
-  offer: "Offer",
-  rejected: "Rejected",
-  withdrawn: "Withdrawn",
-  closed: "Closed",
-};
-
-const dateFormatter = new Intl.DateTimeFormat("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
 
 export function ApplicationsPanel() {
   const [statusFilter, setStatusFilter] =
@@ -86,7 +72,7 @@ export function ApplicationsPanel() {
 
             {APPLICATION_STATUSES.map((status) => (
               <option key={status} value={status}>
-                {STATUS_LABELS[status]}
+                {APPLICATION_STATUS_LABELS[status]}
               </option>
             ))}
           </select>
@@ -123,31 +109,40 @@ export function ApplicationsPanel() {
           <ul aria-label="Applications" className="space-y-3">
             {data.applications.map((application) => (
               <li key={application.id}>
-                <article className="bg-background flex flex-col gap-4 rounded-xl border p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <h3 className="font-medium">{application.roleTitle}</h3>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      {application.companyName}
-                    </p>
-                  </div>
+                <Link
+                  href={`/applications/${application.id}`}
+                  className="group focus-visible:border-ring focus-visible:ring-ring/50 block rounded-xl outline-none focus-visible:ring-3"
+                >
+                  <article className="bg-background group-hover:bg-muted/40 flex flex-col gap-4 rounded-xl border p-5 transition-colors sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <h3 className="font-medium">{application.roleTitle}</h3>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {application.companyName}
+                      </p>
+                    </div>
 
-                  <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
-                    <time
-                      dateTime={application.updatedAt}
-                      className="text-muted-foreground text-xs"
-                    >
-                      Updated{" "}
-                      {dateFormatter.format(new Date(application.updatedAt))}
-                    </time>
+                    <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
+                      <time
+                        dateTime={application.updatedAt}
+                        className="text-muted-foreground text-xs"
+                      >
+                        Updated {formatApplicationDate(application.updatedAt)}
+                      </time>
 
-                    <span
-                      aria-label={`Status: ${STATUS_LABELS[application.status]}`}
-                      className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium"
-                    >
-                      {STATUS_LABELS[application.status]}
-                    </span>
-                  </div>
-                </article>
+                      <span
+                        aria-label={`Status: ${APPLICATION_STATUS_LABELS[application.status]}`}
+                        className="bg-muted text-muted-foreground rounded-full px-3 py-1 text-xs font-medium"
+                      >
+                        {APPLICATION_STATUS_LABELS[application.status]}
+                      </span>
+
+                      <ArrowRight
+                        aria-hidden="true"
+                        className="text-muted-foreground size-4 transition-transform group-hover:translate-x-0.5"
+                      />
+                    </div>
+                  </article>
+                </Link>
               </li>
             ))}
           </ul>
