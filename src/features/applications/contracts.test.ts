@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   applicationListSchema,
-  applicationSummarySchema,
+  module2ApplicationListSchema,
+  module2ApplicationSummarySchema,
 } from "@/features/applications/contracts";
 
 const applicationResponse = {
@@ -16,7 +17,7 @@ const applicationResponse = {
 
 describe("application contracts", () => {
   it("validates and converts a Module 2 application summary", () => {
-    expect(applicationSummarySchema.parse(applicationResponse)).toEqual({
+    expect(module2ApplicationSummarySchema.parse(applicationResponse)).toEqual({
       id: "9b52d879-79b6-4af4-a369-886b77f4bb6e",
       companyName: "Example Bank",
       roleTitle: "Graduate AI Engineer",
@@ -28,7 +29,7 @@ describe("application contracts", () => {
 
   it("rejects a status that Module 2 does not support", () => {
     expect(() =>
-      applicationSummarySchema.parse({
+      module2ApplicationSummarySchema.parse({
         ...applicationResponse,
         status: "draft",
       }),
@@ -37,10 +38,30 @@ describe("application contracts", () => {
 
   it("rejects an inconsistent application count", () => {
     expect(() =>
-      applicationListSchema.parse({
+      module2ApplicationListSchema.parse({
         applications: [applicationResponse],
         count: 2,
       }),
     ).toThrow("Application count does not match");
+  });
+
+  it("validates the camel-case application list returned to the browser", () => {
+    const applicationList = {
+      applications: [
+        {
+          id: applicationResponse.application_id,
+          companyName: applicationResponse.company_name,
+          roleTitle: applicationResponse.role_title,
+          status: applicationResponse.status,
+          createdAt: applicationResponse.created_at,
+          updatedAt: applicationResponse.updated_at,
+        },
+      ],
+      count: 1,
+    };
+
+    expect(applicationListSchema.parse(applicationList)).toEqual(
+      applicationList,
+    );
   });
 });

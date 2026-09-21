@@ -1,0 +1,87 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import {
+  ApplicationsApiError,
+  fetchApplications,
+} from "@/features/applications/browser-api";
+
+const applicationList = {
+  applications: [
+    {
+      id: "9b52d879-79b6-4af4-a369-886b77f4bb6e",
+      companyName: "Example Bank",
+      roleTitle: "Graduate AI Engineer",
+      status: "saved",
+      createdAt: "2026-09-20T10:00:00Z",
+      updatedAt: "2026-09-20T10:30:00Z",
+    },
+  ],
+  count: 1,
+};
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("fetchApplications", () => {
+  it("requests and validates applications from the internal API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      Response.json(applicationList, {
+        status: 200,
+      }),
+    );
+    const controller = new AbortController();
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      fetchApplications("saved", controller.signal),
+    ).resolves.toEqual(applicationList);
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/applications?status=saved", {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
+  });
+
+  it("preserves a safe error returned by the API route", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        Response.json(
+          {
+            error: {
+              code: "UPSTREAM_UNAVAILABLE",
+              message: "CareerOps services are temporarily unavailable.",
+            },
+          },
+          { status: 502 },
+        ),
+      ),
+    );
+
+    await expect(fetchApplications()).rejects.toMatchObject({
+      name: "ApplicationsApiError",
+      status: 502,
+      code: "UPSTREAM_UNAVAILABLE",
+      message: "CareerOps services are temporarily unavailable.",
+    } satisfies Partial<ApplicationsApiError>);
+  });
+
+  it("rejects a successful response with an invalid contract", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          Response.json({ applications: [], count: 1 }, { status: 200 }),
+        ),
+    );
+
+    await expect(fetchApplications()).rejects.toMatchObject({
+      status: 200,
+      code: "INVALID_RESPONSE",
+      message: "CareerOps returned an invalid response.",
+    });
+  });
+});

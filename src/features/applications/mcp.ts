@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import {
-  applicationListSchema,
+  module2ApplicationListSchema,
   type ApplicationList,
   type ApplicationStatus,
 } from "@/features/applications/contracts";
@@ -39,5 +39,5 @@ export async function listApplicationsFromMcp(
     throw new Error("Module 2 returned no structured application data.");
   }
 
-  return applicationListSchema.parse(result.structuredContent);
+  return module2ApplicationListSchema.parse(result.structuredContent);
 }
