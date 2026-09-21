@@ -1,0 +1,60 @@
+import { describe, expect, it, vi } from "vitest";
+
+import { listApplicationsFromMcp } from "@/features/applications/mcp";
+
+const applicationResponse = {
+  application_id: "9b52d879-79b6-4af4-a369-886b77f4bb6e",
+  company_name: "Example Bank",
+  role_title: "Graduate AI Engineer",
+  status: "saved",
+  created_at: "2026-09-20T10:00:00Z",
+  updated_at: "2026-09-20T10:30:00Z",
+};
+
+describe("listApplicationsFromMcp", () => {
+  it("calls Module 2 and returns validated applications", async () => {
+    const callTool = vi.fn().mockResolvedValue({
+      structuredContent: {
+        applications: [applicationResponse],
+        count: 1,
+      },
+    });
+
+    await expect(
+      listApplicationsFromMcp({ callTool }, "saved"),
+    ).resolves.toEqual({
+      applications: [
+        {
+          id: "9b52d879-79b6-4af4-a369-886b77f4bb6e",
+          companyName: "Example Bank",
+          roleTitle: "Graduate AI Engineer",
+          status: "saved",
+          createdAt: "2026-09-20T10:00:00Z",
+          updatedAt: "2026-09-20T10:30:00Z",
+        },
+      ],
+      count: 1,
+    });
+
+    expect(callTool).toHaveBeenCalledWith({
+      name: "list_applications",
+      arguments: { status: "saved" },
+    });
+  });
+
+  it("rejects a Module 2 tool error", async () => {
+    const callTool = vi.fn().mockResolvedValue({ isError: true });
+
+    await expect(listApplicationsFromMcp({ callTool })).rejects.toThrow(
+      "Module 2 could not list applications",
+    );
+  });
+
+  it("rejects a response without structured application data", async () => {
+    const callTool = vi.fn().mockResolvedValue({ content: [] });
+
+    await expect(listApplicationsFromMcp({ callTool })).rejects.toThrow(
+      "Module 2 returned no structured application data",
+    );
+  });
+});
