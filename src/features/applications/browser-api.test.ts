@@ -3,8 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ApplicationsApiError,
   fetchApplication,
+  fetchApplicationAnalysis,
   fetchApplications,
 } from "@/features/applications/browser-api";
+
+import {
+  analysisApplicationId,
+  applicationAnalysis,
+} from "@/test/application-analysis-fixtures";
 
 const applicationList = {
   applications: [
@@ -101,6 +107,29 @@ describe("fetchApplication", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/applications/${application.id}`,
+      {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      },
+    );
+  });
+});
+
+describe("fetchApplicationAnalysis", () => {
+  it("requests and validates persisted analysis from the internal API", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(Response.json(applicationAnalysis));
+    const controller = new AbortController();
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      fetchApplicationAnalysis(analysisApplicationId, controller.signal),
+    ).resolves.toEqual(applicationAnalysis);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/applications/${analysisApplicationId}/analysis`,
       {
         headers: { Accept: "application/json" },
         signal: controller.signal,

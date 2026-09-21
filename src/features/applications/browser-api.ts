@@ -1,6 +1,11 @@
 import { z } from "zod";
 
 import {
+  applicationAnalysisSchema,
+  type ApplicationAnalysis,
+} from "@/features/applications/analysis-contracts";
+
+import {
   applicationListSchema,
   applicationSummarySchema,
   type ApplicationList,
@@ -52,6 +57,17 @@ export async function fetchApplication(
   return requestCareerOpsApi(
     `/api/applications/${encodeURIComponent(applicationId)}`,
     applicationSummarySchema,
+    signal,
+  );
+}
+
+export async function fetchApplicationAnalysis(
+  applicationId: string,
+  signal?: AbortSignal,
+): Promise<ApplicationAnalysis> {
+  return requestCareerOpsApi(
+    `/api/applications/${encodeURIComponent(applicationId)}/analysis`,
+    applicationAnalysisSchema,
     signal,
   );
 }

@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ApplicationAnalysisPanel } from "@/features/applications/application-analysis-panel";
 import { ApplicationDetailPanel } from "@/features/applications/application-detail-panel";
 import { applicationIdSchema } from "@/features/applications/contracts";
 
@@ -31,6 +32,7 @@ export default async function ApplicationPage({
         </Link>
 
         <ApplicationDetailPanel applicationId={parsedApplicationId.data} />
+        <ApplicationAnalysisPanel applicationId={parsedApplicationId.data} />
       </div>
     </main>
   );
