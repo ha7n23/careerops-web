@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   applicationListSchema,
+  createApplicationRequestSchema,
   module2ApplicationListSchema,
   module2ApplicationSummarySchema,
 } from "@/features/applications/contracts";
@@ -73,5 +74,18 @@ describe("application contracts", () => {
     expect(
       module2ApplicationAnalysisSchema.parse(module2ApplicationAnalysis),
     ).toEqual(applicationAnalysis);
+  });
+  it("validates and normalises a create-application request", () => {
+    expect(
+      createApplicationRequestSchema.parse({
+        companyName: " Example Bank ",
+        roleTitle: " Graduate AI Engineer ",
+        idempotencyKey: " create-001 ",
+      }),
+    ).toEqual({
+      companyName: "Example Bank",
+      roleTitle: "Graduate AI Engineer",
+      idempotencyKey: "create-001",
+    });
   });
 });

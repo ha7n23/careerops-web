@@ -6,6 +6,7 @@ import {
   type ApplicationList,
   type ApplicationStatus,
   type ApplicationSummary,
+  type CreateApplicationRequest,
 } from "@/features/applications/contracts";
 
 import {
@@ -69,6 +70,32 @@ export async function getApplicationFromMcp(
 
   if (result.isError) {
     throw new Error("Module 2 could not get the application.");
+  }
+
+  if (result.structuredContent === undefined) {
+    throw new Error("Module 2 returned no structured application data.");
+  }
+
+  return module2ApplicationSummarySchema.parse(result.structuredContent);
+}
+
+export async function createApplicationFromMcp(
+  client: McpToolCaller,
+  input: CreateApplicationRequest,
+): Promise<ApplicationSummary> {
+  const result = toolResultSchema.parse(
+    await client.callTool({
+      name: "create_application",
+      arguments: {
+        company_name: input.companyName,
+        role_title: input.roleTitle,
+        idempotency_key: input.idempotencyKey,
+      },
+    }),
+  );
+
+  if (result.isError) {
+    throw new Error("Module 2 could not create the application.");
   }
 
   if (result.structuredContent === undefined) {

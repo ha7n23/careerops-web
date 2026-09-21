@@ -34,6 +34,24 @@ export const applicationListSchema = z
     path: ["count"],
   });
 
+export const createApplicationFieldsSchema = z.object({
+  companyName: z
+    .string()
+    .trim()
+    .min(1, "Enter the company name.")
+    .max(255, "Company name must be 255 characters or fewer."),
+  roleTitle: z
+    .string()
+    .trim()
+    .min(1, "Enter the role title.")
+    .max(255, "Role title must be 255 characters or fewer."),
+});
+
+export const createApplicationRequestSchema =
+  createApplicationFieldsSchema.extend({
+    idempotencyKey: z.string().trim().min(1).max(128),
+  });
+
 export const module2ApplicationSummarySchema = z
   .object({
     application_id: applicationIdSchema,
@@ -67,3 +85,10 @@ export const module2ApplicationListSchema = z
 export type ApplicationStatus = z.infer<typeof applicationStatusSchema>;
 export type ApplicationSummary = z.infer<typeof applicationSummarySchema>;
 export type ApplicationList = z.infer<typeof applicationListSchema>;
+
+export type CreateApplicationFields = z.infer<
+  typeof createApplicationFieldsSchema
+>;
+export type CreateApplicationRequest = z.infer<
+  typeof createApplicationRequestSchema
+>;
