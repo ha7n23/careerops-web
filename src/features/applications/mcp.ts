@@ -11,7 +11,10 @@ import {
 
 import {
   module2ApplicationAnalysisSchema,
+  module2PrepareApplicationResultSchema,
   type ApplicationAnalysis,
+  type PrepareApplicationRequest,
+  type PrepareApplicationResult,
 } from "@/features/applications/analysis-contracts";
 
 type ToolCallRequest = {
@@ -125,4 +128,30 @@ export async function getApplicationAnalysisFromMcp(
   }
 
   return module2ApplicationAnalysisSchema.parse(result.structuredContent);
+}
+
+export async function prepareApplicationFromMcp(
+  client: McpToolCaller,
+  applicationId: string,
+  input: PrepareApplicationRequest,
+): Promise<PrepareApplicationResult> {
+  const result = toolResultSchema.parse(
+    await client.callTool({
+      name: "prepare_application",
+      arguments: {
+        application_id: applicationId,
+        job_description: input.jobDescription,
+      },
+    }),
+  );
+
+  if (result.isError) {
+    throw new Error("Module 2 could not prepare the application.");
+  }
+
+  if (result.structuredContent === undefined) {
+    throw new Error("Module 2 returned no structured preparation data.");
+  }
+
+  return module2PrepareApplicationResultSchema.parse(result.structuredContent);
 }

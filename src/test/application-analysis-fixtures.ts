@@ -115,3 +115,13 @@ export const applicationAnalysis = {
     reviewStatus: null,
   },
 } as const;
+
+export const module2PrepareApplicationResult = {
+  ...module2ApplicationAnalysis,
+  started_new_analysis: true,
+} as const;
+
+export const prepareApplicationResult = {
+  ...applicationAnalysis,
+  startedNewAnalysis: true,
+} as const;

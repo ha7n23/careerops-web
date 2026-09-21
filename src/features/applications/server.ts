@@ -6,12 +6,17 @@ import type {
   ApplicationSummary,
   CreateApplicationRequest,
 } from "@/features/applications/contracts";
-import type { ApplicationAnalysis } from "@/features/applications/analysis-contracts";
+import type {
+  ApplicationAnalysis,
+  PrepareApplicationRequest,
+  PrepareApplicationResult,
+} from "@/features/applications/analysis-contracts";
 import {
+  createApplicationFromMcp,
+  getApplicationAnalysisFromMcp,
   getApplicationFromMcp,
   listApplicationsFromMcp,
-  getApplicationAnalysisFromMcp,
-  createApplicationFromMcp,
+  prepareApplicationFromMcp,
 } from "@/features/applications/mcp";
 import { withCareerOpsMcpClient } from "@/integrations/mcp/client";
 
@@ -44,5 +49,14 @@ export async function createApplication(
 ): Promise<ApplicationSummary> {
   return withCareerOpsMcpClient((client) =>
     createApplicationFromMcp(client, input),
+  );
+}
+
+export async function prepareApplication(
+  applicationId: string,
+  input: PrepareApplicationRequest,
+): Promise<PrepareApplicationResult> {
+  return withCareerOpsMcpClient((client) =>
+    prepareApplicationFromMcp(client, applicationId, input),
   );
 }

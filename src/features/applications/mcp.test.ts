@@ -6,12 +6,15 @@ import {
   getApplicationFromMcp,
   createApplicationFromMcp,
   listApplicationsFromMcp,
+  prepareApplicationFromMcp,
 } from "@/features/applications/mcp";
 
 import {
   analysisApplicationId,
   applicationAnalysis,
   module2ApplicationAnalysis,
+  module2PrepareApplicationResult,
+  prepareApplicationResult,
 } from "@/test/application-analysis-fixtures";
 
 const applicationResponse = {
@@ -189,5 +192,56 @@ describe("createApplicationFromMcp", () => {
         },
       ),
     ).rejects.toThrow("Module 2 could not create the application");
+  });
+});
+
+describe("prepareApplicationFromMcp", () => {
+  it("calls Module 2 and returns a validated preparation result", async () => {
+    const callTool = vi.fn().mockResolvedValue({
+      structuredContent: module2PrepareApplicationResult,
+    });
+
+    await expect(
+      prepareApplicationFromMcp({ callTool }, analysisApplicationId, {
+        jobDescription: "Strong Python skills are essential.",
+      }),
+    ).resolves.toEqual(prepareApplicationResult);
+
+    expect(callTool).toHaveBeenCalledWith({
+      name: "prepare_application",
+      arguments: {
+        application_id: analysisApplicationId,
+        job_description: "Strong Python skills are essential.",
+      },
+    });
+  });
+
+  it("allows an idempotent replay without inline analysis", async () => {
+    const callTool = vi.fn().mockResolvedValue({
+      structuredContent: {
+        ...module2PrepareApplicationResult,
+        analysis: null,
+        started_new_analysis: false,
+      },
+    });
+
+    await expect(
+      prepareApplicationFromMcp({ callTool }, analysisApplicationId, {
+        jobDescription: "Strong Python skills are essential.",
+      }),
+    ).resolves.toMatchObject({
+      analysis: null,
+      startedNewAnalysis: false,
+    });
+  });
+
+  it("rejects a Module 2 tool error", async () => {
+    const callTool = vi.fn().mockResolvedValue({ isError: true });
+
+    await expect(
+      prepareApplicationFromMcp({ callTool }, analysisApplicationId, {
+        jobDescription: "Strong Python skills are essential.",
+      }),
+    ).rejects.toThrow("Module 2 could not prepare the application");
   });
 });

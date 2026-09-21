@@ -6,6 +6,14 @@ import {
   module2ApplicationSummarySchema,
 } from "@/features/applications/contracts";
 
+export const prepareApplicationRequestSchema = z.object({
+  jobDescription: z
+    .string()
+    .trim()
+    .min(1, "Enter the job description.")
+    .max(50_000, "Job description must be 50,000 characters or fewer."),
+});
+
 const applicationPreparationStatusSchema = z.enum([
   "pending",
   "starting",
@@ -87,6 +95,13 @@ export const applicationAnalysisSchema = z.object({
   application: applicationSummarySchema,
   preparation: applicationPreparationSchema,
   analysis: agentEngineAnalysisSchema,
+});
+
+export const prepareApplicationResultSchema = z.object({
+  application: applicationSummarySchema,
+  preparation: applicationPreparationSchema,
+  analysis: agentEngineAnalysisSchema.nullable(),
+  startedNewAnalysis: z.boolean(),
 });
 
 const module2ApplicationPreparationSchema = z
@@ -200,4 +215,26 @@ export const module2ApplicationAnalysisSchema = z
   })
   .pipe(applicationAnalysisSchema);
 
+export const module2PrepareApplicationResultSchema = z
+  .object({
+    application: module2ApplicationSummarySchema,
+    preparation: module2ApplicationPreparationSchema,
+    analysis: module2AgentEngineAnalysisSchema.nullable(),
+    started_new_analysis: z.boolean(),
+  })
+  .transform((result) =>
+    prepareApplicationResultSchema.parse({
+      application: result.application,
+      preparation: result.preparation,
+      analysis: result.analysis,
+      startedNewAnalysis: result.started_new_analysis,
+    }),
+  );
+
 export type ApplicationAnalysis = z.infer<typeof applicationAnalysisSchema>;
+export type PrepareApplicationRequest = z.infer<
+  typeof prepareApplicationRequestSchema
+>;
+export type PrepareApplicationResult = z.infer<
+  typeof prepareApplicationResultSchema
+>;
