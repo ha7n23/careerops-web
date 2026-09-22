@@ -17,6 +17,12 @@ import {
   type PrepareApplicationResult,
 } from "@/features/applications/analysis-contracts";
 
+import {
+  module2ReviewApplicationResultSchema,
+  type ReviewApplicationRequest,
+  type ReviewApplicationResult,
+} from "@/features/applications/review-contracts";
+
 type ToolCallRequest = {
   name: string;
   arguments?: Record<string, unknown>;
@@ -26,7 +32,7 @@ type ToolCallOptions = {
   timeout?: number;
 };
 
-const PREPARE_APPLICATION_TIMEOUT_MS = 660_000;
+const APPLICATION_WORKFLOW_TIMEOUT_MS = 660_000;
 
 export class ApplicationAnalysisUnavailableError extends Error {
   constructor() {
@@ -156,7 +162,7 @@ export async function prepareApplicationFromMcp(
       },
       undefined,
       {
-        timeout: PREPARE_APPLICATION_TIMEOUT_MS,
+        timeout: APPLICATION_WORKFLOW_TIMEOUT_MS,
       },
     ),
   );
@@ -170,4 +176,44 @@ export async function prepareApplicationFromMcp(
   }
 
   return module2PrepareApplicationResultSchema.parse(result.structuredContent);
+}
+
+export async function reviewApplicationFromMcp(
+  client: McpToolCaller,
+  applicationId: string,
+  input: ReviewApplicationRequest,
+): Promise<ReviewApplicationResult> {
+  const result = toolResultSchema.parse(
+    await client.callTool(
+      {
+        name: "review_application",
+        arguments: {
+          application_id: applicationId,
+          idempotency_key: input.idempotencyKey,
+          action: input.action,
+          approved_proposal_ids: input.approvedProposalIds,
+          rejected_proposal_ids: input.rejectedProposalIds,
+          edits: input.edits.map((edit) => ({
+            proposal_id: edit.proposalId,
+            edited_text: edit.editedText,
+          })),
+          reviewer_comment: input.reviewerComment,
+        },
+      },
+      undefined,
+      {
+        timeout: APPLICATION_WORKFLOW_TIMEOUT_MS,
+      },
+    ),
+  );
+
+  if (result.isError) {
+    throw new Error("Module 2 could not review the application.");
+  }
+
+  if (result.structuredContent === undefined) {
+    throw new Error("Module 2 returned no structured review data.");
+  }
+
+  return module2ReviewApplicationResultSchema.parse(result.structuredContent);
 }

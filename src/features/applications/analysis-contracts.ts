@@ -28,7 +28,7 @@ const applicationAnalysisStatusSchema = z.enum([
   "completed",
 ]);
 
-const applicationReviewActionSchema = z.enum([
+export const applicationReviewActionSchema = z.enum([
   "approve",
   "edit",
   "reject",
@@ -65,7 +65,7 @@ const cvProposalSchema = z.object({
   warnings: z.array(z.string()),
 });
 
-const applicationPreparationSchema = z.object({
+export const applicationPreparationSchema = z.object({
   id: z.string().uuid(),
   applicationId: applicationIdSchema,
   status: applicationPreparationStatusSchema,
@@ -76,7 +76,7 @@ const applicationPreparationSchema = z.object({
   updatedAt: z.string().datetime({ offset: true }),
 });
 
-const agentEngineAnalysisSchema = z.object({
+export const agentEngineAnalysisSchema = z.object({
   status: applicationAnalysisStatusSchema,
   threadId: z.string().trim().min(1),
   jobId: z.string().trim().min(1),
@@ -104,7 +104,7 @@ export const prepareApplicationResultSchema = z.object({
   startedNewAnalysis: z.boolean(),
 });
 
-const module2ApplicationPreparationSchema = z
+export const module2ApplicationPreparationSchema = z
   .object({
     preparation_id: z.string().uuid(),
     application_id: applicationIdSchema,
@@ -128,7 +128,7 @@ const module2ApplicationPreparationSchema = z
     }),
   );
 
-const module2AgentEngineAnalysisSchema = z
+export const module2AgentEngineAnalysisSchema = z
   .object({
     status: applicationAnalysisStatusSchema,
     thread_id: z.string().trim().min(1),

@@ -125,3 +125,73 @@ export const prepareApplicationResult = {
   ...applicationAnalysis,
   startedNewAnalysis: true,
 } as const;
+
+export const module2ReviewApplicationResult = {
+  application: {
+    ...module2ApplicationAnalysis.application,
+    status: "ready_to_apply",
+  },
+  preparation: {
+    ...module2ApplicationAnalysis.preparation,
+    status: "completed",
+  },
+  submission: {
+    review_submission_id: "a3c48a42-14cf-4565-8d3d-5f9dbc705f1a",
+    preparation_id: module2ApplicationAnalysis.preparation.preparation_id,
+    application_id: analysisApplicationId,
+    thread_id: "THR-001",
+    idempotency_key: "review-001",
+    action: "approve",
+    approved_proposal_ids: ["CVP-001"],
+    rejected_proposal_ids: [],
+    edits: [],
+    reviewer_comment: null,
+    status: "completed",
+    outcome: "completed",
+    error_message: null,
+    created_at: "2026-09-20T10:31:00Z",
+    updated_at: "2026-09-20T10:32:00Z",
+  },
+  analysis: {
+    ...module2ApplicationAnalysis.analysis,
+    status: "completed",
+    allowed_review_actions: [],
+    review_status: "approved",
+  },
+  started_new_review: true,
+} as const;
+
+export const reviewApplicationResult = {
+  application: {
+    ...applicationAnalysis.application,
+    status: "ready_to_apply",
+  },
+  preparation: {
+    ...applicationAnalysis.preparation,
+    status: "completed",
+  },
+  submission: {
+    id: "a3c48a42-14cf-4565-8d3d-5f9dbc705f1a",
+    preparationId: applicationAnalysis.preparation.id,
+    applicationId: analysisApplicationId,
+    threadId: "THR-001",
+    idempotencyKey: "review-001",
+    action: "approve",
+    approvedProposalIds: ["CVP-001"],
+    rejectedProposalIds: [],
+    edits: [],
+    reviewerComment: null,
+    status: "completed",
+    outcome: "completed",
+    errorMessage: null,
+    createdAt: "2026-09-20T10:31:00Z",
+    updatedAt: "2026-09-20T10:32:00Z",
+  },
+  analysis: {
+    ...applicationAnalysis.analysis,
+    status: "completed",
+    allowedReviewActions: [],
+    reviewStatus: "approved",
+  },
+  startedNewReview: true,
+} as const;

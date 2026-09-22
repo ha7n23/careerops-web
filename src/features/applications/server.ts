@@ -11,12 +11,17 @@ import type {
   PrepareApplicationRequest,
   PrepareApplicationResult,
 } from "@/features/applications/analysis-contracts";
+import type {
+  ReviewApplicationRequest,
+  ReviewApplicationResult,
+} from "@/features/applications/review-contracts";
 import {
   createApplicationFromMcp,
   getApplicationAnalysisFromMcp,
   getApplicationFromMcp,
   listApplicationsFromMcp,
   prepareApplicationFromMcp,
+  reviewApplicationFromMcp,
 } from "@/features/applications/mcp";
 import { withCareerOpsMcpClient } from "@/integrations/mcp/client";
 
@@ -58,5 +63,14 @@ export async function prepareApplication(
 ): Promise<PrepareApplicationResult> {
   return withCareerOpsMcpClient((client) =>
     prepareApplicationFromMcp(client, applicationId, input),
+  );
+}
+
+export async function reviewApplication(
+  applicationId: string,
+  input: ReviewApplicationRequest,
+): Promise<ReviewApplicationResult> {
+  return withCareerOpsMcpClient((client) =>
+    reviewApplicationFromMcp(client, applicationId, input),
   );
 }

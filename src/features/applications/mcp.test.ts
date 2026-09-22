@@ -7,6 +7,7 @@ import {
   createApplicationFromMcp,
   listApplicationsFromMcp,
   prepareApplicationFromMcp,
+  reviewApplicationFromMcp,
 } from "@/features/applications/mcp";
 
 import {
@@ -15,6 +16,8 @@ import {
   module2ApplicationAnalysis,
   module2PrepareApplicationResult,
   prepareApplicationResult,
+  module2ReviewApplicationResult,
+  reviewApplicationResult,
 } from "@/test/application-analysis-fixtures";
 
 const applicationResponse = {
@@ -249,5 +252,58 @@ describe("prepareApplicationFromMcp", () => {
         jobDescription: "Strong Python skills are essential.",
       }),
     ).rejects.toThrow("Module 2 could not prepare the application");
+  });
+});
+
+describe("reviewApplicationFromMcp", () => {
+  it("calls Module 2 and returns a validated review result", async () => {
+    const callTool = vi.fn().mockResolvedValue({
+      structuredContent: module2ReviewApplicationResult,
+    });
+
+    await expect(
+      reviewApplicationFromMcp({ callTool }, analysisApplicationId, {
+        idempotencyKey: "review-001",
+        action: "approve",
+        approvedProposalIds: ["CVP-001"],
+        rejectedProposalIds: [],
+        edits: [],
+        reviewerComment: null,
+      }),
+    ).resolves.toEqual(reviewApplicationResult);
+
+    expect(callTool).toHaveBeenCalledWith(
+      {
+        name: "review_application",
+        arguments: {
+          application_id: analysisApplicationId,
+          idempotency_key: "review-001",
+          action: "approve",
+          approved_proposal_ids: ["CVP-001"],
+          rejected_proposal_ids: [],
+          edits: [],
+          reviewer_comment: null,
+        },
+      },
+      undefined,
+      {
+        timeout: 660_000,
+      },
+    );
+  });
+
+  it("rejects a Module 2 tool error", async () => {
+    const callTool = vi.fn().mockResolvedValue({ isError: true });
+
+    await expect(
+      reviewApplicationFromMcp({ callTool }, analysisApplicationId, {
+        idempotencyKey: "review-001",
+        action: "approve",
+        approvedProposalIds: ["CVP-001"],
+        rejectedProposalIds: [],
+        edits: [],
+        reviewerComment: null,
+      }),
+    ).rejects.toThrow("Module 2 could not review the application");
   });
 });
