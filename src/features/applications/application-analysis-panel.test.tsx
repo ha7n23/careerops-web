@@ -44,6 +44,7 @@ describe("ApplicationAnalysisPanel", () => {
       mutateAsync: vi.fn(),
       isPending: false,
       error: null,
+      variables: undefined,
     });
   });
 
@@ -235,7 +236,7 @@ describe("ApplicationAnalysisPanel", () => {
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", { name: "Reject all proposals" }),
+      screen.getByRole("button", { name: "Decline all CV changes" }),
     ).toBeInTheDocument();
   });
 });

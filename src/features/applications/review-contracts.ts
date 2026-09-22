@@ -15,9 +15,12 @@ import {
 
 const proposalIdSchema = z.string().trim().min(1);
 
+export const REVIEW_EDIT_MAX_LENGTH = 1_500;
+export const REVIEW_COMMENT_MAX_LENGTH = 1_000;
+
 const applicationReviewEditSchema = z.object({
   proposalId: proposalIdSchema,
-  editedText: z.string().trim().min(1),
+  editedText: z.string().trim().min(1).max(REVIEW_EDIT_MAX_LENGTH),
 });
 
 const applicationReviewSubmissionStatusSchema = z.enum([
@@ -54,7 +57,12 @@ export const reviewApplicationRequestSchema = z.object({
   approvedProposalIds: z.array(proposalIdSchema).default([]),
   rejectedProposalIds: z.array(proposalIdSchema).default([]),
   edits: z.array(applicationReviewEditSchema).default([]),
-  reviewerComment: z.string().trim().max(2_000).nullable().default(null),
+  reviewerComment: z
+    .string()
+    .trim()
+    .max(REVIEW_COMMENT_MAX_LENGTH)
+    .nullable()
+    .default(null),
 });
 
 export const reviewApplicationResultSchema = z.object({
@@ -78,7 +86,7 @@ const module2ApplicationReviewSubmissionSchema = z
     edits: z.array(
       z.object({
         proposal_id: proposalIdSchema,
-        edited_text: z.string().trim().min(1),
+        edited_text: z.string().trim().min(1).max(REVIEW_EDIT_MAX_LENGTH),
       }),
     ),
     reviewer_comment: z.string().nullable(),

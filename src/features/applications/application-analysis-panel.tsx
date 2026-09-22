@@ -86,6 +86,12 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
     data.analysis.evidenceMatches.map((match) => [match.requirementId, match]),
   );
 
+  const reviewableProposalIds = new Set(data.analysis.reviewableProposalIds);
+
+  const reviewableProposals = data.analysis.cvProposals.filter((proposal) =>
+    reviewableProposalIds.has(proposal.id),
+  );
+
   return (
     <section aria-labelledby="analysis-title" className="space-y-6">
       <div className="bg-card flex flex-col gap-5 rounded-2xl border p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -248,10 +254,10 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
       </div>
 
       {data.analysis.status === "awaiting_review" &&
-        data.analysis.reviewableProposalIds.length > 0 && (
+        reviewableProposals.length > 0 && (
           <ApplicationReviewControls
             applicationId={data.application.id}
-            reviewableProposalIds={data.analysis.reviewableProposalIds}
+            reviewableProposals={reviewableProposals}
             allowedReviewActions={data.analysis.allowedReviewActions}
           />
         )}
