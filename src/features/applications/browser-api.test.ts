@@ -6,6 +6,7 @@ import {
   fetchApplication,
   fetchApplicationAnalysis,
   fetchApplications,
+  fetchPendingActions,
   prepareApplication,
   reviewApplication,
 } from "@/features/applications/browser-api";
@@ -16,6 +17,8 @@ import {
   prepareApplicationResult,
   reviewApplicationResult,
 } from "@/test/application-analysis-fixtures";
+
+import { pendingActions } from "@/test/pending-actions-fixtures";
 
 const applicationList = {
   applications: [
@@ -140,6 +143,24 @@ describe("fetchApplicationAnalysis", () => {
         signal: controller.signal,
       },
     );
+  });
+});
+
+describe("fetchPendingActions", () => {
+  it("requests and validates pending actions from the internal API", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(Response.json(pendingActions));
+    const controller = new AbortController();
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchPendingActions(controller.signal)).resolves.toEqual(
+      pendingActions,
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/actions/pending", {
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    });
   });
 });
 

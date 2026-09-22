@@ -8,6 +8,7 @@ import {
   fetchApplication,
   fetchApplicationAnalysis,
   fetchApplications,
+  fetchPendingActions,
   prepareApplication,
   reviewApplication,
 } from "@/features/applications/browser-api";
@@ -28,10 +29,21 @@ export const applicationQueryKeys = {
     [...applicationQueryKeys.detail(applicationId), "analysis"] as const,
 };
 
+export const pendingActionQueryKeys = {
+  all: ["pending-actions"] as const,
+};
+
 export function useApplications(status?: ApplicationStatus) {
   return useQuery({
     queryKey: applicationQueryKeys.list(status),
     queryFn: ({ signal }) => fetchApplications(status, signal),
+  });
+}
+
+export function usePendingActions() {
+  return useQuery({
+    queryKey: pendingActionQueryKeys.all,
+    queryFn: ({ signal }) => fetchPendingActions(signal),
   });
 }
 
@@ -98,9 +110,14 @@ export function usePrepareApplication() {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: applicationQueryKeys.all,
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: applicationQueryKeys.all,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: pendingActionQueryKeys.all,
+        }),
+      ]);
     },
   });
 }
@@ -134,9 +151,14 @@ export function useReviewApplication() {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: applicationQueryKeys.all,
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: applicationQueryKeys.all,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: pendingActionQueryKeys.all,
+        }),
+      ]);
     },
   });
 }

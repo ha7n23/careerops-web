@@ -23,6 +23,11 @@ import {
   type ReviewApplicationResult,
 } from "@/features/applications/review-contracts";
 
+import {
+  pendingActionsSchema,
+  type PendingActions,
+} from "@/features/applications/pending-actions-contracts";
+
 const apiErrorSchema = z.object({
   error: z.object({
     code: z.string(),
@@ -78,6 +83,16 @@ export async function fetchApplicationAnalysis(
   return requestCareerOpsApi(
     `/api/applications/${encodeURIComponent(applicationId)}/analysis`,
     applicationAnalysisSchema,
+    signal,
+  );
+}
+
+export async function fetchPendingActions(
+  signal?: AbortSignal,
+): Promise<PendingActions> {
+  return requestCareerOpsApi(
+    "/api/actions/pending",
+    pendingActionsSchema,
     signal,
   );
 }

@@ -8,6 +8,7 @@ const {
   fetchApplicationAnalysisMock,
   fetchApplicationMock,
   fetchApplicationsMock,
+  fetchPendingActionsMock,
   prepareApplicationMock,
   reviewApplicationMock,
 } = vi.hoisted(() => ({
@@ -15,6 +16,7 @@ const {
   fetchApplicationAnalysisMock: vi.fn(),
   fetchApplicationMock: vi.fn(),
   fetchApplicationsMock: vi.fn(),
+  fetchPendingActionsMock: vi.fn(),
   prepareApplicationMock: vi.fn(),
   reviewApplicationMock: vi.fn(),
 }));
@@ -30,6 +32,7 @@ vi.mock("@/features/applications/browser-api", async () => {
     fetchApplication: fetchApplicationMock,
     fetchApplicationAnalysis: fetchApplicationAnalysisMock,
     fetchApplications: fetchApplicationsMock,
+    fetchPendingActions: fetchPendingActionsMock,
     prepareApplication: prepareApplicationMock,
     reviewApplication: reviewApplicationMock,
   };
@@ -42,6 +45,7 @@ import {
   useApplications,
   useCreateApplication,
   usePrepareApplication,
+  usePendingActions,
   useReviewApplication,
 } from "@/features/applications/use-applications";
 
@@ -51,6 +55,8 @@ import {
   prepareApplicationResult,
   reviewApplicationResult,
 } from "@/test/application-analysis-fixtures";
+
+import { pendingActions } from "@/test/pending-actions-fixtures";
 
 describe("useApplications", () => {
   it("loads applications through React Query", async () => {
@@ -82,6 +88,39 @@ describe("useApplications", () => {
     expect(result.current.data).toEqual(applicationList);
     expect(fetchApplicationsMock).toHaveBeenCalledWith(
       "saved",
+      expect.any(AbortSignal),
+    );
+  });
+});
+
+describe("usePendingActions", () => {
+  it("loads pending actions through React Query", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+      },
+    });
+
+    fetchPendingActionsMock.mockResolvedValue(pendingActions);
+
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+    }
+
+    const { result } = renderHook(() => usePendingActions(), {
+      wrapper: Wrapper,
+    });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+
+    expect(result.current.data).toEqual(pendingActions);
+    expect(fetchPendingActionsMock).toHaveBeenCalledWith(
       expect.any(AbortSignal),
     );
   });
