@@ -4,6 +4,7 @@ import {
   ApplicationAnalysisUnavailableError,
   getApplicationAnalysisFromMcp,
   getApplicationFromMcp,
+  getPendingActionsFromMcp,
   createApplicationFromMcp,
   listApplicationsFromMcp,
   prepareApplicationFromMcp,
@@ -19,6 +20,11 @@ import {
   module2ReviewApplicationResult,
   reviewApplicationResult,
 } from "@/test/application-analysis-fixtures";
+
+import {
+  module2PendingActions,
+  pendingActions,
+} from "@/test/pending-actions-fixtures";
 
 const applicationResponse = {
   application_id: "9b52d879-79b6-4af4-a369-886b77f4bb6e",
@@ -305,5 +311,38 @@ describe("reviewApplicationFromMcp", () => {
         reviewerComment: null,
       }),
     ).rejects.toThrow("Module 2 could not review the application");
+  });
+});
+
+describe("getPendingActionsFromMcp", () => {
+  it("calls Module 2 and returns validated pending actions", async () => {
+    const callTool = vi.fn().mockResolvedValue({
+      structuredContent: module2PendingActions,
+    });
+
+    await expect(getPendingActionsFromMcp({ callTool })).resolves.toEqual(
+      pendingActions,
+    );
+
+    expect(callTool).toHaveBeenCalledWith({
+      name: "get_pending_actions",
+      arguments: {},
+    });
+  });
+
+  it("rejects a Module 2 tool error", async () => {
+    const callTool = vi.fn().mockResolvedValue({ isError: true });
+
+    await expect(getPendingActionsFromMcp({ callTool })).rejects.toThrow(
+      "Module 2 could not get pending actions",
+    );
+  });
+
+  it("rejects a response without structured pending action data", async () => {
+    const callTool = vi.fn().mockResolvedValue({ content: [] });
+
+    await expect(getPendingActionsFromMcp({ callTool })).rejects.toThrow(
+      "Module 2 returned no structured pending action data",
+    );
   });
 });

@@ -23,6 +23,11 @@ import {
   type ReviewApplicationResult,
 } from "@/features/applications/review-contracts";
 
+import {
+  module2PendingActionsSchema,
+  type PendingActions,
+} from "@/features/applications/pending-actions-contracts";
+
 type ToolCallRequest = {
   name: string;
   arguments?: Record<string, unknown>;
@@ -216,4 +221,25 @@ export async function reviewApplicationFromMcp(
   }
 
   return module2ReviewApplicationResultSchema.parse(result.structuredContent);
+}
+
+export async function getPendingActionsFromMcp(
+  client: McpToolCaller,
+): Promise<PendingActions> {
+  const result = toolResultSchema.parse(
+    await client.callTool({
+      name: "get_pending_actions",
+      arguments: {},
+    }),
+  );
+
+  if (result.isError) {
+    throw new Error("Module 2 could not get pending actions.");
+  }
+
+  if (result.structuredContent === undefined) {
+    throw new Error("Module 2 returned no structured pending action data.");
+  }
+
+  return module2PendingActionsSchema.parse(result.structuredContent);
 }

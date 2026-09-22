@@ -15,10 +15,12 @@ import type {
   ReviewApplicationRequest,
   ReviewApplicationResult,
 } from "@/features/applications/review-contracts";
+import type { PendingActions } from "@/features/applications/pending-actions-contracts";
 import {
   createApplicationFromMcp,
   getApplicationAnalysisFromMcp,
   getApplicationFromMcp,
+  getPendingActionsFromMcp,
   listApplicationsFromMcp,
   prepareApplicationFromMcp,
   reviewApplicationFromMcp,
@@ -73,4 +75,8 @@ export async function reviewApplication(
   return withCareerOpsMcpClient((client) =>
     reviewApplicationFromMcp(client, applicationId, input),
   );
+}
+
+export async function getPendingActions(): Promise<PendingActions> {
+  return withCareerOpsMcpClient((client) => getPendingActionsFromMcp(client));
 }
