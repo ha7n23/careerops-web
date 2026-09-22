@@ -22,6 +22,12 @@ type ToolCallRequest = {
   arguments?: Record<string, unknown>;
 };
 
+type ToolCallOptions = {
+  timeout?: number;
+};
+
+const PREPARE_APPLICATION_TIMEOUT_MS = 660_000;
+
 export class ApplicationAnalysisUnavailableError extends Error {
   constructor() {
     super("Module 2 has no available analysis for this application.");
@@ -30,7 +36,11 @@ export class ApplicationAnalysisUnavailableError extends Error {
 }
 
 export type McpToolCaller = {
-  callTool(request: ToolCallRequest): Promise<unknown>;
+  callTool(
+    request: ToolCallRequest,
+    resultSchema?: undefined,
+    options?: ToolCallOptions,
+  ): Promise<unknown>;
 };
 
 const toolResultSchema = z.object({
@@ -136,13 +146,19 @@ export async function prepareApplicationFromMcp(
   input: PrepareApplicationRequest,
 ): Promise<PrepareApplicationResult> {
   const result = toolResultSchema.parse(
-    await client.callTool({
-      name: "prepare_application",
-      arguments: {
-        application_id: applicationId,
-        job_description: input.jobDescription,
+    await client.callTool(
+      {
+        name: "prepare_application",
+        arguments: {
+          application_id: applicationId,
+          job_description: input.jobDescription,
+        },
       },
-    }),
+      undefined,
+      {
+        timeout: PREPARE_APPLICATION_TIMEOUT_MS,
+      },
+    ),
   );
 
   if (result.isError) {

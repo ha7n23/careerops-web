@@ -9,6 +9,7 @@ import {
   formatApplicationDate,
 } from "@/features/applications/presentation";
 import { useApplication } from "@/features/applications/use-applications";
+import { PrepareApplicationForm } from "@/features/applications/prepare-application-form";
 
 type ApplicationDetailPanelProps = {
   applicationId: string;
@@ -87,6 +88,10 @@ export function ApplicationDetailPanel({
           <dd className="mt-2 font-mono text-sm break-all">{data.id}</dd>
         </div>
       </dl>
+
+      {data.status === "saved" && (
+        <PrepareApplicationForm applicationId={data.id} />
+      )}
     </section>
   );
 }

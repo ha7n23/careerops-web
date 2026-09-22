@@ -2,7 +2,10 @@ import { z } from "zod";
 
 import {
   applicationAnalysisSchema,
+  prepareApplicationResultSchema,
   type ApplicationAnalysis,
+  type PrepareApplicationRequest,
+  type PrepareApplicationResult,
 } from "@/features/applications/analysis-contracts";
 
 import {
@@ -79,6 +82,18 @@ export async function createApplication(
   return requestCareerOpsApi(
     "/api/applications",
     applicationSummarySchema,
+    undefined,
+    { method: "POST", body: input },
+  );
+}
+
+export async function prepareApplication(
+  applicationId: string,
+  input: PrepareApplicationRequest,
+): Promise<PrepareApplicationResult> {
+  return requestCareerOpsApi(
+    `/api/applications/${encodeURIComponent(applicationId)}/prepare`,
+    prepareApplicationResultSchema,
     undefined,
     { method: "POST", body: input },
   );

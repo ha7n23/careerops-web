@@ -8,19 +8,29 @@ const {
   fetchApplicationAnalysisMock,
   fetchApplicationMock,
   fetchApplicationsMock,
+  prepareApplicationMock,
 } = vi.hoisted(() => ({
   createApplicationMock: vi.fn(),
   fetchApplicationAnalysisMock: vi.fn(),
   fetchApplicationMock: vi.fn(),
   fetchApplicationsMock: vi.fn(),
+  prepareApplicationMock: vi.fn(),
 }));
 
-vi.mock("@/features/applications/browser-api", () => ({
-  createApplication: createApplicationMock,
-  fetchApplication: fetchApplicationMock,
-  fetchApplicationAnalysis: fetchApplicationAnalysisMock,
-  fetchApplications: fetchApplicationsMock,
-}));
+vi.mock("@/features/applications/browser-api", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/features/applications/browser-api")
+  >("@/features/applications/browser-api");
+
+  return {
+    ...actual,
+    createApplication: createApplicationMock,
+    fetchApplication: fetchApplicationMock,
+    fetchApplicationAnalysis: fetchApplicationAnalysisMock,
+    fetchApplications: fetchApplicationsMock,
+    prepareApplication: prepareApplicationMock,
+  };
+});
 
 import {
   applicationQueryKeys,
@@ -28,11 +38,13 @@ import {
   useApplicationAnalysis,
   useApplications,
   useCreateApplication,
+  usePrepareApplication,
 } from "@/features/applications/use-applications";
 
 import {
   analysisApplicationId,
   applicationAnalysis,
+  prepareApplicationResult,
 } from "@/test/application-analysis-fixtures";
 
 describe("useApplications", () => {
@@ -195,5 +207,132 @@ describe("useApplicationAnalysis", () => {
       analysisApplicationId,
       expect.any(AbortSignal),
     );
+  });
+});
+
+describe("usePrepareApplication", () => {
+  it("prepares an application and refreshes application queries", async () => {
+    const input = {
+      jobDescription: "Strong Python skills are essential.",
+    };
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+
+    prepareApplicationMock.mockResolvedValue(prepareApplicationResult);
+
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+    }
+
+    const { result } = renderHook(() => usePrepareApplication(), {
+      wrapper: Wrapper,
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        applicationId: analysisApplicationId,
+        input,
+      });
+    });
+
+    expect(prepareApplicationMock.mock.calls[0][0]).toBe(analysisApplicationId);
+    expect(prepareApplicationMock.mock.calls[0][1]).toEqual(input);
+    expect(
+      queryClient.getQueryData(
+        applicationQueryKeys.detail(analysisApplicationId),
+      ),
+    ).toEqual(prepareApplicationResult.application);
+    expect(
+      queryClient.getQueryData(
+        applicationQueryKeys.analysis(analysisApplicationId),
+      ),
+    ).toEqual(applicationAnalysis);
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: applicationQueryKeys.all,
+    });
+  });
+
+  it("marks the application as preparing while the request is pending", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    const savedApplication = {
+      ...prepareApplicationResult.application,
+      status: "saved" as const,
+    };
+
+    queryClient.setQueryData(
+      applicationQueryKeys.detail(analysisApplicationId),
+      savedApplication,
+    );
+
+    let resolvePreparation:
+      ((value: typeof prepareApplicationResult) => void) | undefined;
+
+    const pendingPreparation = new Promise<typeof prepareApplicationResult>(
+      (resolve) => {
+        resolvePreparation = resolve;
+      },
+    );
+
+    prepareApplicationMock.mockReturnValue(pendingPreparation);
+
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+    }
+
+    const { result } = renderHook(() => usePrepareApplication(), {
+      wrapper: Wrapper,
+    });
+
+    let mutationPromise: Promise<unknown> | undefined;
+
+    act(() => {
+      mutationPromise = result.current.mutateAsync({
+        applicationId: analysisApplicationId,
+        input: {
+          jobDescription:
+            "Build and maintain Python services for an AI engineering team.",
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(
+        queryClient.getQueryData(
+          applicationQueryKeys.detail(analysisApplicationId),
+        ),
+      ).toMatchObject({
+        status: "preparing",
+      });
+    });
+
+    await act(async () => {
+      resolvePreparation?.(prepareApplicationResult);
+      await mutationPromise;
+    });
+
+    expect(
+      queryClient.getQueryData(
+        applicationQueryKeys.detail(analysisApplicationId),
+      ),
+    ).toEqual(prepareApplicationResult.application);
   });
 });

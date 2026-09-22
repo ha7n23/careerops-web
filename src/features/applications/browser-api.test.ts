@@ -6,11 +6,13 @@ import {
   fetchApplication,
   fetchApplicationAnalysis,
   fetchApplications,
+  prepareApplication,
 } from "@/features/applications/browser-api";
 
 import {
   analysisApplicationId,
   applicationAnalysis,
+  prepareApplicationResult,
 } from "@/test/application-analysis-fixtures";
 
 const applicationList = {
@@ -166,5 +168,35 @@ describe("createApplication", () => {
       body: JSON.stringify(input),
       signal: undefined,
     });
+  });
+});
+
+describe("prepareApplication", () => {
+  it("posts and validates an application preparation", async () => {
+    const input = {
+      jobDescription: "Strong Python skills are essential.",
+    };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(Response.json(prepareApplicationResult));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      prepareApplication(analysisApplicationId, input),
+    ).resolves.toEqual(prepareApplicationResult);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/applications/${analysisApplicationId}/prepare`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+        signal: undefined,
+      },
+    );
   });
 });

@@ -8,11 +8,13 @@ import {
   applicationAnalysis,
 } from "@/test/application-analysis-fixtures";
 
-const { useApplicationAnalysisMock } = vi.hoisted(() => ({
+const { useApplicationAnalysisMock, useApplicationMock } = vi.hoisted(() => ({
   useApplicationAnalysisMock: vi.fn(),
+  useApplicationMock: vi.fn(),
 }));
 
 vi.mock("@/features/applications/use-applications", () => ({
+  useApplication: useApplicationMock,
   useApplicationAnalysis: useApplicationAnalysisMock,
 }));
 
@@ -20,7 +22,16 @@ import { ApplicationAnalysisPanel } from "@/features/applications/application-an
 
 describe("ApplicationAnalysisPanel", () => {
   beforeEach(() => {
+    useApplicationMock.mockReset();
     useApplicationAnalysisMock.mockReset();
+
+    useApplicationMock.mockReturnValue({
+      data: applicationAnalysis.application,
+      error: null,
+      isPending: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
   });
 
   it("shows a loading state while analysis is requested", () => {
@@ -63,6 +74,59 @@ describe("ApplicationAnalysisPanel", () => {
     ).toBeInTheDocument();
 
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+
+    expect(useApplicationAnalysisMock).toHaveBeenCalledWith(
+      analysisApplicationId,
+      false,
+    );
+  });
+
+  it("shows preparation progress and enables polling while preparing", () => {
+    useApplicationMock.mockReturnValue({
+      data: {
+        ...applicationAnalysis.application,
+        status: "preparing",
+      },
+      error: null,
+      isPending: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    useApplicationAnalysisMock.mockReturnValue({
+      data: undefined,
+      error: new ApplicationsApiError(
+        "This application does not have an available analysis yet.",
+        404,
+        "ANALYSIS_NOT_AVAILABLE",
+      ),
+      isPending: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    render(<ApplicationAnalysisPanel applicationId={analysisApplicationId} />);
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Preparation in progress",
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText(/this page will update automatically/i),
+    ).toBeInTheDocument();
+
+    expect(useApplicationAnalysisMock).toHaveBeenCalledWith(
+      analysisApplicationId,
+      true,
+    );
+
+    expect(
+      screen.queryByRole("heading", {
+        name: "No application analysis yet",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows an error state and retries unexpected failures", async () => {

@@ -10,6 +10,12 @@ vi.mock("@/features/applications/use-applications", () => ({
   useApplication: useApplicationMock,
 }));
 
+vi.mock("@/features/applications/prepare-application-form", () => ({
+  PrepareApplicationForm: ({ applicationId }: { applicationId: string }) => (
+    <div>Prepare application form for {applicationId}</div>
+  ),
+}));
+
 import { ApplicationDetailPanel } from "@/features/applications/application-detail-panel";
 
 const applicationId = "9b52d879-79b6-4af4-a369-886b77f4bb6e";
@@ -85,5 +91,31 @@ describe("ApplicationDetailPanel", () => {
     expect(screen.getByText(applicationId)).toBeInTheDocument();
     expect(screen.getByText("20 Sept 2026")).toBeInTheDocument();
     expect(screen.getByText("21 Sept 2026")).toBeInTheDocument();
+    expect(
+      screen.queryByText(`Prepare application form for ${applicationId}`),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows preparation controls for a saved application", () => {
+    useApplicationMock.mockReturnValue({
+      data: {
+        id: applicationId,
+        companyName: "Example Bank",
+        roleTitle: "Graduate AI Engineer",
+        status: "saved",
+        createdAt: "2026-09-20T10:00:00Z",
+        updatedAt: "2026-09-21T10:30:00Z",
+      },
+      isPending: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    render(<ApplicationDetailPanel applicationId={applicationId} />);
+
+    expect(
+      screen.getByText(`Prepare application form for ${applicationId}`),
+    ).toBeInTheDocument();
   });
 });

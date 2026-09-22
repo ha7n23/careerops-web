@@ -7,8 +7,17 @@ import {
   fetchApplication,
   fetchApplicationAnalysis,
   fetchApplications,
+  prepareApplication,
 } from "@/features/applications/browser-api";
-import type { ApplicationStatus } from "@/features/applications/contracts";
+import {
+  ApplicationsApiError,
+  // Keep your existing imports here.
+} from "@/features/applications/browser-api";
+import type { PrepareApplicationRequest } from "@/features/applications/analysis-contracts";
+import type {
+  ApplicationStatus,
+  ApplicationSummary,
+} from "@/features/applications/contracts";
 
 export const applicationQueryKeys = {
   all: ["applications"] as const,
@@ -45,6 +54,58 @@ export function useCreateApplication() {
   });
 }
 
+type PrepareApplicationVariables = {
+  applicationId: string;
+  input: PrepareApplicationRequest;
+};
+
+export function usePrepareApplication() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ applicationId, input }: PrepareApplicationVariables) =>
+      prepareApplication(applicationId, input),
+    onMutate: async ({ applicationId }) => {
+      const detailKey = applicationQueryKeys.detail(applicationId);
+
+      await queryClient.cancelQueries({
+        queryKey: detailKey,
+      });
+
+      queryClient.setQueryData<ApplicationSummary>(detailKey, (application) =>
+        application === undefined
+          ? undefined
+          : {
+              ...application,
+              status: "preparing",
+            },
+      );
+    },
+    onSuccess: (result) => {
+      queryClient.setQueryData(
+        applicationQueryKeys.detail(result.application.id),
+        result.application,
+      );
+
+      if (result.analysis !== null) {
+        queryClient.setQueryData(
+          applicationQueryKeys.analysis(result.application.id),
+          {
+            application: result.application,
+            preparation: result.preparation,
+            analysis: result.analysis,
+          },
+        );
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: applicationQueryKeys.all,
+      });
+    },
+  });
+}
+
 export function useApplication(applicationId: string) {
   return useQuery({
     queryKey: applicationQueryKeys.detail(applicationId),
@@ -52,10 +113,28 @@ export function useApplication(applicationId: string) {
   });
 }
 
-export function useApplicationAnalysis(applicationId: string) {
+const ANALYSIS_POLL_INTERVAL_MS = 5_000;
+
+export function useApplicationAnalysis(
+  applicationId: string,
+  pollWhilePreparing = false,
+) {
   return useQuery({
     queryKey: applicationQueryKeys.analysis(applicationId),
     queryFn: ({ signal }) => fetchApplicationAnalysis(applicationId, signal),
+    enabled: applicationId.length > 0,
     retry: false,
+    refetchInterval: (query) => {
+      const error = query.state.error;
+
+      const analysisIsNotAvailable =
+        error instanceof ApplicationsApiError &&
+        error.code === "ANALYSIS_NOT_AVAILABLE";
+
+      return pollWhilePreparing && analysisIsNotAvailable
+        ? ANALYSIS_POLL_INTERVAL_MS
+        : false;
+    },
+    refetchIntervalInBackground: false,
   });
 }

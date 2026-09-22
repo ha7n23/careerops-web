@@ -4,6 +4,7 @@ import {
   BarChart3,
   CircleAlert,
   FileText,
+  LoaderCircle,
   RefreshCw,
   Sparkles,
 } from "lucide-react";
@@ -11,7 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import type { ApplicationAnalysis } from "@/features/applications/analysis-contracts";
 import { ApplicationsApiError } from "@/features/applications/browser-api";
-import { useApplicationAnalysis } from "@/features/applications/use-applications";
+import {
+  useApplication,
+  useApplicationAnalysis,
+} from "@/features/applications/use-applications";
 
 type ApplicationAnalysisPanelProps = {
   applicationId: string;
@@ -41,10 +45,15 @@ const SECTION_LABELS = {
 export function ApplicationAnalysisPanel({
   applicationId,
 }: ApplicationAnalysisPanelProps) {
-  const { data, error, isPending, isFetching, refetch } =
-    useApplicationAnalysis(applicationId);
+  const { data: application, isPending: isApplicationPending } =
+    useApplication(applicationId);
 
-  if (isPending) {
+  const isPreparing = application?.status === "preparing";
+
+  const { data, error, isPending, isFetching, refetch } =
+    useApplicationAnalysis(applicationId, isPreparing);
+
+  if (isPending || isApplicationPending) {
     return <ApplicationAnalysisLoading />;
   }
 
@@ -52,7 +61,11 @@ export function ApplicationAnalysisPanel({
     error instanceof ApplicationsApiError &&
     error.code === "ANALYSIS_NOT_AVAILABLE"
   ) {
-    return <ApplicationAnalysisUnavailable />;
+    return isPreparing ? (
+      <ApplicationAnalysisPreparing />
+    ) : (
+      <ApplicationAnalysisUnavailable />
+    );
   }
 
   if (error !== null) {
@@ -77,6 +90,7 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
       <div className="bg-card flex flex-col gap-5 rounded-2xl border p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-muted-foreground text-sm">Preparation results</p>
+
           <h2 id="analysis-title" className="mt-1 text-2xl font-semibold">
             Application analysis
           </h2>
@@ -115,6 +129,7 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
         <div className="bg-card rounded-2xl border p-6 shadow-sm">
           <div className="flex items-center gap-3">
             <Sparkles aria-hidden="true" className="size-5" />
+
             <h3 className="text-lg font-semibold">Requirements and evidence</h3>
           </div>
 
@@ -174,6 +189,7 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
       <div className="bg-card rounded-2xl border p-6 shadow-sm">
         <div className="flex items-center gap-3">
           <FileText aria-hidden="true" className="size-5" />
+
           <h3 className="text-lg font-semibold">CV proposals</h3>
         </div>
 
@@ -252,6 +268,34 @@ function ApplicationAnalysisLoading() {
         className="bg-muted h-40 animate-pulse rounded-xl"
       />
     </div>
+  );
+}
+
+function ApplicationAnalysisPreparing() {
+  return (
+    <section
+      role="status"
+      aria-live="polite"
+      aria-labelledby="analysis-title"
+      className="bg-card rounded-2xl border p-6 shadow-sm"
+    >
+      <div className="bg-muted w-fit rounded-xl p-3">
+        <LoaderCircle
+          aria-hidden="true"
+          className="text-muted-foreground size-5 animate-spin"
+        />
+      </div>
+
+      <h2 id="analysis-title" className="mt-5 text-xl font-semibold">
+        Preparation in progress
+      </h2>
+
+      <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
+        CareerOps is analysing the job description and matching it against your
+        verified evidence. This page will update automatically when the results
+        are ready.
+      </p>
+    </section>
   );
 }
 

@@ -207,13 +207,19 @@ describe("prepareApplicationFromMcp", () => {
       }),
     ).resolves.toEqual(prepareApplicationResult);
 
-    expect(callTool).toHaveBeenCalledWith({
-      name: "prepare_application",
-      arguments: {
-        application_id: analysisApplicationId,
-        job_description: "Strong Python skills are essential.",
+    expect(callTool).toHaveBeenCalledWith(
+      {
+        name: "prepare_application",
+        arguments: {
+          application_id: analysisApplicationId,
+          job_description: "Strong Python skills are essential.",
+        },
       },
-    });
+      undefined,
+      {
+        timeout: 660_000,
+      },
+    );
   });
 
   it("allows an idempotent replay without inline analysis", async () => {
