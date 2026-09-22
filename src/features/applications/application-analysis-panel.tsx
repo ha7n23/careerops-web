@@ -11,6 +11,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import type { ApplicationAnalysis } from "@/features/applications/analysis-contracts";
+import { ApplicationReviewControls } from "@/features/applications/application-review-controls";
 import { ApplicationsApiError } from "@/features/applications/browser-api";
 import {
   useApplication,
@@ -245,6 +246,15 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
           </div>
         )}
       </div>
+
+      {data.analysis.status === "awaiting_review" &&
+        data.analysis.reviewableProposalIds.length > 0 && (
+          <ApplicationReviewControls
+            applicationId={data.application.id}
+            reviewableProposalIds={data.analysis.reviewableProposalIds}
+            allowedReviewActions={data.analysis.allowedReviewActions}
+          />
+        )}
     </section>
   );
 }

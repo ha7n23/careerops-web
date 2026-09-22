@@ -3,21 +3,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  ApplicationsApiError,
   createApplication,
   fetchApplication,
   fetchApplicationAnalysis,
   fetchApplications,
   prepareApplication,
-} from "@/features/applications/browser-api";
-import {
-  ApplicationsApiError,
-  // Keep your existing imports here.
+  reviewApplication,
 } from "@/features/applications/browser-api";
 import type { PrepareApplicationRequest } from "@/features/applications/analysis-contracts";
 import type {
   ApplicationStatus,
   ApplicationSummary,
 } from "@/features/applications/contracts";
+import type { ReviewApplicationRequest } from "@/features/applications/review-contracts";
 
 export const applicationQueryKeys = {
   all: ["applications"] as const,
@@ -81,6 +80,42 @@ export function usePrepareApplication() {
             },
       );
     },
+    onSuccess: (result) => {
+      queryClient.setQueryData(
+        applicationQueryKeys.detail(result.application.id),
+        result.application,
+      );
+
+      if (result.analysis !== null) {
+        queryClient.setQueryData(
+          applicationQueryKeys.analysis(result.application.id),
+          {
+            application: result.application,
+            preparation: result.preparation,
+            analysis: result.analysis,
+          },
+        );
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: applicationQueryKeys.all,
+      });
+    },
+  });
+}
+
+type ReviewApplicationVariables = {
+  applicationId: string;
+  input: ReviewApplicationRequest;
+};
+
+export function useReviewApplication() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ applicationId, input }: ReviewApplicationVariables) =>
+      reviewApplication(applicationId, input),
     onSuccess: (result) => {
       queryClient.setQueryData(
         applicationQueryKeys.detail(result.application.id),

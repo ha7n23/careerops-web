@@ -9,12 +9,14 @@ const {
   fetchApplicationMock,
   fetchApplicationsMock,
   prepareApplicationMock,
+  reviewApplicationMock,
 } = vi.hoisted(() => ({
   createApplicationMock: vi.fn(),
   fetchApplicationAnalysisMock: vi.fn(),
   fetchApplicationMock: vi.fn(),
   fetchApplicationsMock: vi.fn(),
   prepareApplicationMock: vi.fn(),
+  reviewApplicationMock: vi.fn(),
 }));
 
 vi.mock("@/features/applications/browser-api", async () => {
@@ -29,6 +31,7 @@ vi.mock("@/features/applications/browser-api", async () => {
     fetchApplicationAnalysis: fetchApplicationAnalysisMock,
     fetchApplications: fetchApplicationsMock,
     prepareApplication: prepareApplicationMock,
+    reviewApplication: reviewApplicationMock,
   };
 });
 
@@ -39,12 +42,14 @@ import {
   useApplications,
   useCreateApplication,
   usePrepareApplication,
+  useReviewApplication,
 } from "@/features/applications/use-applications";
 
 import {
   analysisApplicationId,
   applicationAnalysis,
   prepareApplicationResult,
+  reviewApplicationResult,
 } from "@/test/application-analysis-fixtures";
 
 describe("useApplications", () => {
@@ -334,5 +339,73 @@ describe("usePrepareApplication", () => {
         applicationQueryKeys.detail(analysisApplicationId),
       ),
     ).toEqual(prepareApplicationResult.application);
+  });
+});
+
+describe("useReviewApplication", () => {
+  it("reviews an application and refreshes cached application data", async () => {
+    const input = {
+      idempotencyKey: "review-001",
+      action: "approve" as const,
+      approvedProposalIds: ["CVP-001"],
+      rejectedProposalIds: [],
+      edits: [],
+      reviewerComment: null,
+    };
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+
+    reviewApplicationMock.mockResolvedValue(reviewApplicationResult);
+
+    function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      );
+    }
+
+    const { result } = renderHook(() => useReviewApplication(), {
+      wrapper: Wrapper,
+    });
+
+    await act(async () => {
+      await result.current.mutateAsync({
+        applicationId: analysisApplicationId,
+        input,
+      });
+    });
+
+    expect(reviewApplicationMock).toHaveBeenCalledWith(
+      analysisApplicationId,
+      input,
+    );
+
+    expect(
+      queryClient.getQueryData(
+        applicationQueryKeys.detail(analysisApplicationId),
+      ),
+    ).toEqual(reviewApplicationResult.application);
+
+    expect(
+      queryClient.getQueryData(
+        applicationQueryKeys.analysis(analysisApplicationId),
+      ),
+    ).toEqual({
+      application: reviewApplicationResult.application,
+      preparation: reviewApplicationResult.preparation,
+      analysis: reviewApplicationResult.analysis,
+    });
+
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: applicationQueryKeys.all,
+    });
   });
 });

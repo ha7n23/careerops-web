@@ -8,14 +8,20 @@ import {
   applicationAnalysis,
 } from "@/test/application-analysis-fixtures";
 
-const { useApplicationAnalysisMock, useApplicationMock } = vi.hoisted(() => ({
+const {
+  useApplicationAnalysisMock,
+  useApplicationMock,
+  useReviewApplicationMock,
+} = vi.hoisted(() => ({
   useApplicationAnalysisMock: vi.fn(),
   useApplicationMock: vi.fn(),
+  useReviewApplicationMock: vi.fn(),
 }));
 
 vi.mock("@/features/applications/use-applications", () => ({
   useApplication: useApplicationMock,
   useApplicationAnalysis: useApplicationAnalysisMock,
+  useReviewApplication: useReviewApplicationMock,
 }));
 
 import { ApplicationAnalysisPanel } from "@/features/applications/application-analysis-panel";
@@ -24,6 +30,7 @@ describe("ApplicationAnalysisPanel", () => {
   beforeEach(() => {
     useApplicationMock.mockReset();
     useApplicationAnalysisMock.mockReset();
+    useReviewApplicationMock.mockReset();
 
     useApplicationMock.mockReturnValue({
       data: applicationAnalysis.application,
@@ -31,6 +38,12 @@ describe("ApplicationAnalysisPanel", () => {
       isPending: false,
       isFetching: false,
       refetch: vi.fn(),
+    });
+
+    useReviewApplicationMock.mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+      error: null,
     });
   });
 
@@ -191,6 +204,38 @@ describe("ApplicationAnalysisPanel", () => {
 
     expect(
       screen.getByText("Built a production retrieval system."),
+    ).toBeInTheDocument();
+  });
+
+  it("renders review controls for reviewable proposals", () => {
+    useApplicationAnalysisMock.mockReturnValue({
+      data: {
+        ...applicationAnalysis,
+        analysis: {
+          ...applicationAnalysis.analysis,
+          status: "awaiting_review",
+          reviewableProposalIds: ["CVP-001"],
+          allowedReviewActions: ["approve", "reject"],
+        },
+      },
+      error: null,
+      isPending: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    render(<ApplicationAnalysisPanel applicationId={analysisApplicationId} />);
+
+    expect(
+      screen.getByRole("heading", { name: "Review CV proposals" }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("button", { name: "Approve all proposals" }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole("button", { name: "Reject all proposals" }),
     ).toBeInTheDocument();
   });
 });

@@ -17,6 +17,12 @@ import {
   type CreateApplicationRequest,
 } from "@/features/applications/contracts";
 
+import {
+  reviewApplicationResultSchema,
+  type ReviewApplicationRequest,
+  type ReviewApplicationResult,
+} from "@/features/applications/review-contracts";
+
 const apiErrorSchema = z.object({
   error: z.object({
     code: z.string(),
@@ -94,6 +100,18 @@ export async function prepareApplication(
   return requestCareerOpsApi(
     `/api/applications/${encodeURIComponent(applicationId)}/prepare`,
     prepareApplicationResultSchema,
+    undefined,
+    { method: "POST", body: input },
+  );
+}
+
+export async function reviewApplication(
+  applicationId: string,
+  input: ReviewApplicationRequest,
+): Promise<ReviewApplicationResult> {
+  return requestCareerOpsApi(
+    `/api/applications/${encodeURIComponent(applicationId)}/review`,
+    reviewApplicationResultSchema,
     undefined,
     { method: "POST", body: input },
   );

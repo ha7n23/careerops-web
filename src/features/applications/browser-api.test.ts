@@ -7,12 +7,14 @@ import {
   fetchApplicationAnalysis,
   fetchApplications,
   prepareApplication,
+  reviewApplication,
 } from "@/features/applications/browser-api";
 
 import {
   analysisApplicationId,
   applicationAnalysis,
   prepareApplicationResult,
+  reviewApplicationResult,
 } from "@/test/application-analysis-fixtures";
 
 const applicationList = {
@@ -188,6 +190,42 @@ describe("prepareApplication", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       `/api/applications/${analysisApplicationId}/prepare`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(input),
+        signal: undefined,
+      },
+    );
+  });
+});
+
+describe("reviewApplication", () => {
+  it("posts and validates an application review", async () => {
+    const input = {
+      idempotencyKey: "review-001",
+      action: "approve" as const,
+      approvedProposalIds: ["CVP-001"],
+      rejectedProposalIds: [],
+      edits: [],
+      reviewerComment: null,
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(Response.json(reviewApplicationResult));
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      reviewApplication(analysisApplicationId, input),
+    ).resolves.toEqual(reviewApplicationResult);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/applications/${analysisApplicationId}/review`,
       {
         method: "POST",
         headers: {
