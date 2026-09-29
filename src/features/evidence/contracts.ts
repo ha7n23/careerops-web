@@ -16,8 +16,13 @@ export const EVIDENCE_DUPLICATE_ACTIONS = [
   "merge_into_existing",
 ] as const;
 
+export const EVIDENCE_LIFECYCLE_STATUSES = ["active", "archived"] as const;
+
 export const evidenceCategorySchema = z.enum(EVIDENCE_CATEGORIES);
 export const evidenceDuplicateActionSchema = z.enum(EVIDENCE_DUPLICATE_ACTIONS);
+export const evidenceLifecycleStatusSchema = z.enum(
+  EVIDENCE_LIFECYCLE_STATUSES,
+);
 export const evidenceOverlapScopeSchema = z.enum([
   "within_document",
   "approved_evidence",
@@ -89,6 +94,27 @@ const approvedEvidenceSchema = z.object({
   title: z.string().min(1),
   lifecycleStatus: z.enum(["active", "archived"]),
   approvedClaims: z.array(z.string()),
+});
+
+export const registryEvidenceSchema = z.object({
+  evidenceId: opaqueIdSchema,
+  category: evidenceCategorySchema,
+  title: z.string().min(1).max(250),
+  verificationStatus: z.enum(["pending", "approved", "rejected", "superseded"]),
+  lifecycleStatus: evidenceLifecycleStatusSchema,
+  technologies: z.array(z.string()),
+  capabilities: z.array(z.string()),
+  approvedClaims: z.array(z.string().min(1)),
+  sourceReferences: z.array(sourceReferenceSchema),
+});
+
+export const evidenceRegistryPageSchema = z.object({
+  items: z.array(registryEvidenceSchema),
+  count: z.number().int().nonnegative(),
+  total: z.number().int().nonnegative(),
+  limit: z.number().int().positive().max(100),
+  offset: z.number().int().nonnegative(),
+  hasMore: z.boolean(),
 });
 
 const evidenceReviewResultSchema = z.object({
@@ -255,6 +281,53 @@ const module2ApprovedEvidenceSchema = z
     approvedClaims: evidence.approved_claims,
   }));
 
+export const module2RegistryEvidenceSchema = z
+  .object({
+    evidence_id: opaqueIdSchema,
+    category: evidenceCategorySchema,
+    title: z.string().min(1).max(250),
+    verification_status: z.enum([
+      "pending",
+      "approved",
+      "rejected",
+      "superseded",
+    ]),
+    lifecycle_status: evidenceLifecycleStatusSchema,
+    technologies: z.array(z.string()),
+    capabilities: z.array(z.string()),
+    approved_claims: z.array(z.string().min(1)),
+    source_references: z.array(module2SourceReferenceSchema),
+  })
+  .transform((evidence) => ({
+    evidenceId: evidence.evidence_id,
+    category: evidence.category,
+    title: evidence.title,
+    verificationStatus: evidence.verification_status,
+    lifecycleStatus: evidence.lifecycle_status,
+    technologies: evidence.technologies,
+    capabilities: evidence.capabilities,
+    approvedClaims: evidence.approved_claims,
+    sourceReferences: evidence.source_references,
+  }));
+
+export const module2EvidenceRegistryPageSchema = z
+  .object({
+    items: z.array(module2RegistryEvidenceSchema),
+    count: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative(),
+    limit: z.number().int().positive().max(100),
+    offset: z.number().int().nonnegative(),
+    has_more: z.boolean(),
+  })
+  .transform((page) => ({
+    items: page.items,
+    count: page.count,
+    total: page.total,
+    limit: page.limit,
+    offset: page.offset,
+    hasMore: page.has_more,
+  }));
+
 const module2EvidenceReviewResultSchema = z
   .object({
     approved_proposal_ids: z.array(opaqueIdSchema),
@@ -359,6 +432,36 @@ export const evidenceReviewDecisionSchema = z
     }
   });
 
+export const evidenceRegistryEditSchema = z
+  .object({
+    category: evidenceCategorySchema.optional(),
+    title: z.string().trim().min(1).max(250).optional(),
+    technologies: z
+      .array(z.string().trim().min(1).max(1_000))
+      .max(50)
+      .optional(),
+    capabilities: z
+      .array(z.string().trim().min(1).max(1_000))
+      .max(50)
+      .optional(),
+    approvedClaims: z
+      .array(z.string().trim().min(1).max(1_000))
+      .min(1)
+      .max(50)
+      .optional(),
+  })
+  .refine((edit) => Object.values(edit).some((value) => value !== undefined), {
+    message: "Change at least one evidence field.",
+  });
+
+export const evidenceRegistryQuerySchema = z.object({
+  query: z.string().trim().max(200).default(""),
+  category: evidenceCategorySchema.nullable().default(null),
+  lifecycleStatus: evidenceLifecycleStatusSchema.default("active"),
+  offset: z.number().int().nonnegative().max(10_000).default(0),
+  limit: z.number().int().positive().max(100).default(6),
+});
+
 export type CreateTextEvidenceRequest = z.infer<
   typeof createTextEvidenceRequestSchema
 >;
@@ -374,3 +477,7 @@ export type EvidenceReviewDecision = z.infer<
   typeof evidenceReviewDecisionSchema
 >;
 export type EvidenceReviewHistory = z.infer<typeof evidenceReviewHistorySchema>;
+export type EvidenceRegistryEdit = z.infer<typeof evidenceRegistryEditSchema>;
+export type EvidenceRegistryPage = z.infer<typeof evidenceRegistryPageSchema>;
+export type EvidenceRegistryQuery = z.infer<typeof evidenceRegistryQuerySchema>;
+export type RegistryEvidence = z.infer<typeof registryEvidenceSchema>;

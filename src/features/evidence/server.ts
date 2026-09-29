@@ -7,12 +7,18 @@ import type {
   EvidenceReview,
   EvidenceReviewDecision,
   EvidenceReviewHistory,
+  EvidenceRegistryEdit,
+  EvidenceRegistryPage,
+  EvidenceRegistryQuery,
+  RegistryEvidence,
 } from "@/features/evidence/contracts";
 import {
+  module2EvidenceRegistryPageSchema,
   module2EvidenceDocumentHistorySchema,
   module2EvidenceDocumentSchema,
   module2EvidenceReviewHistorySchema,
   module2EvidenceReviewSchema,
+  module2RegistryEvidenceSchema,
 } from "@/features/evidence/contracts";
 import { createCareerOpsGatewayClient } from "@/integrations/careerops/server-client";
 
@@ -114,5 +120,69 @@ export async function submitEvidenceReview(
         reviewer_comment: decision.reviewerComment,
       }),
     },
+  );
+}
+
+export async function queryEvidenceRegistry(
+  query: EvidenceRegistryQuery,
+): Promise<EvidenceRegistryPage> {
+  const search = new URLSearchParams({
+    lifecycle_status: query.lifecycleStatus,
+    offset: String(query.offset),
+    limit: String(query.limit),
+  });
+
+  if (query.query !== "") {
+    search.set("q", query.query);
+  }
+
+  if (query.category !== null) {
+    search.set("category", query.category);
+  }
+
+  return createCareerOpsGatewayClient().requestJson(
+    `/api/v1/evidence?${search.toString()}`,
+    module2EvidenceRegistryPageSchema,
+  );
+}
+
+export async function getRegistryEvidence(
+  evidenceId: string,
+): Promise<RegistryEvidence> {
+  return createCareerOpsGatewayClient().requestJson(
+    `/api/v1/evidence/${encodeURIComponent(evidenceId)}`,
+    module2RegistryEvidenceSchema,
+  );
+}
+
+export async function editRegistryEvidence(
+  evidenceId: string,
+  edit: EvidenceRegistryEdit,
+): Promise<RegistryEvidence> {
+  return createCareerOpsGatewayClient().requestJson(
+    `/api/v1/evidence/${encodeURIComponent(evidenceId)}`,
+    module2RegistryEvidenceSchema,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category: edit.category,
+        title: edit.title,
+        technologies: edit.technologies,
+        capabilities: edit.capabilities,
+        approved_claims: edit.approvedClaims,
+      }),
+    },
+  );
+}
+
+export async function setRegistryEvidenceLifecycle(
+  evidenceId: string,
+  action: "archive" | "restore",
+): Promise<RegistryEvidence> {
+  return createCareerOpsGatewayClient().requestJson(
+    `/api/v1/evidence/${encodeURIComponent(evidenceId)}/${action}`,
+    module2RegistryEvidenceSchema,
+    { method: "POST" },
   );
 }

@@ -5,12 +5,18 @@ import {
   evidenceDocumentSchema,
   evidenceReviewHistorySchema,
   evidenceReviewSchema,
+  evidenceRegistryPageSchema,
+  registryEvidenceSchema,
   type CreateTextEvidenceRequest,
   type EvidenceDocument,
   type EvidenceDocumentHistory,
   type EvidenceReview,
   type EvidenceReviewDecision,
   type EvidenceReviewHistory,
+  type EvidenceRegistryEdit,
+  type EvidenceRegistryPage,
+  type EvidenceRegistryQuery,
+  type RegistryEvidence,
 } from "@/features/evidence/contracts";
 
 const apiErrorSchema = z.object({
@@ -103,6 +109,72 @@ export function submitEvidenceDecision(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(decision),
+    },
+  );
+}
+
+export function fetchEvidenceRegistry(
+  query: EvidenceRegistryQuery,
+  signal?: AbortSignal,
+): Promise<EvidenceRegistryPage> {
+  const search = new URLSearchParams({
+    lifecycleStatus: query.lifecycleStatus,
+    offset: String(query.offset),
+    limit: String(query.limit),
+  });
+
+  if (query.query !== "") {
+    search.set("q", query.query);
+  }
+
+  if (query.category !== null) {
+    search.set("category", query.category);
+  }
+
+  return requestEvidenceApi(
+    `/api/evidence/registry?${search.toString()}`,
+    evidenceRegistryPageSchema,
+    { signal },
+  );
+}
+
+export function fetchRegistryEvidence(
+  evidenceId: string,
+  signal?: AbortSignal,
+): Promise<RegistryEvidence> {
+  return requestEvidenceApi(
+    `/api/evidence/registry/${encodeURIComponent(evidenceId)}`,
+    registryEvidenceSchema,
+    { signal },
+  );
+}
+
+export function updateRegistryEvidence(
+  evidenceId: string,
+  edit: EvidenceRegistryEdit,
+): Promise<RegistryEvidence> {
+  return requestEvidenceApi(
+    `/api/evidence/registry/${encodeURIComponent(evidenceId)}`,
+    registryEvidenceSchema,
+    {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(edit),
+    },
+  );
+}
+
+export function changeRegistryEvidenceLifecycle(
+  evidenceId: string,
+  action: "archive" | "restore",
+): Promise<RegistryEvidence> {
+  return requestEvidenceApi(
+    `/api/evidence/registry/${encodeURIComponent(evidenceId)}/lifecycle`,
+    registryEvidenceSchema,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
     },
   );
 }

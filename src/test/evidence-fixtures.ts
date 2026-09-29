@@ -3,6 +3,8 @@ import type {
   EvidenceDocumentHistory,
   EvidenceReview,
   EvidenceReviewHistory,
+  EvidenceRegistryPage,
+  RegistryEvidence,
 } from "@/features/evidence/contracts";
 
 export const evidenceDocument: EvidenceDocument = {
@@ -146,4 +148,51 @@ export const module2AwaitingEvidenceReview = {
   ],
   document_warnings: [],
   review_result: null,
+};
+
+export const registryEvidence: RegistryEvidence = {
+  evidenceId: "EVD-001",
+  category: "project",
+  title: "CareerOps platform",
+  verificationStatus: "approved",
+  lifecycleStatus: "active",
+  technologies: ["Python", "FastAPI"],
+  capabilities: ["API development", "Testing"],
+  approvedClaims: ["Built a FastAPI service."],
+  sourceReferences: [
+    {
+      sourceType: "manual_entry",
+      sourceId: "DOC-001",
+      pageNumber: null,
+      sourceExcerpt: "Built a FastAPI service.",
+    },
+  ],
+};
+
+export const evidenceRegistryPage: EvidenceRegistryPage = {
+  items: [registryEvidence],
+  count: 1,
+  total: 1,
+  limit: 6,
+  offset: 0,
+  hasMore: false,
+};
+
+export const module2RegistryEvidence = {
+  evidence_id: "EVD-001",
+  category: "project",
+  title: "CareerOps platform",
+  verification_status: "approved",
+  lifecycle_status: "active",
+  technologies: ["Python", "FastAPI"],
+  capabilities: ["API development", "Testing"],
+  approved_claims: ["Built a FastAPI service."],
+  source_references: [
+    {
+      source_type: "manual_entry",
+      source_id: "DOC-001",
+      page_number: null,
+      source_excerpt: "Built a FastAPI service.",
+    },
+  ],
 };

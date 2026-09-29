@@ -3,16 +3,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  changeRegistryEvidenceLifecycle,
   createTextEvidence,
   fetchEvidenceDocuments,
   fetchEvidenceReview,
   fetchEvidenceReviews,
+  fetchEvidenceRegistry,
+  fetchRegistryEvidence,
   startEvidenceReview,
   submitEvidenceDecision,
   uploadEvidence,
+  updateRegistryEvidence,
 } from "@/features/evidence/browser-api";
 import type {
   CreateTextEvidenceRequest,
+  EvidenceRegistryEdit,
+  EvidenceRegistryQuery,
   EvidenceReviewDecision,
 } from "@/features/evidence/contracts";
 
@@ -22,6 +28,11 @@ export const evidenceQueryKeys = {
   reviews: ["evidence", "reviews"] as const,
   review: (reviewRunId: string) =>
     ["evidence", "reviews", reviewRunId] as const,
+  registryRoot: ["evidence", "registry"] as const,
+  registry: (query: EvidenceRegistryQuery) =>
+    ["evidence", "registry", query] as const,
+  registryEvidence: (evidenceId: string) =>
+    ["evidence", "registry-record", evidenceId] as const,
 };
 
 export function useEvidenceDocuments() {
@@ -110,6 +121,71 @@ export function useSubmitEvidenceReview() {
           queryKey: evidenceQueryKeys.reviews,
         }),
       ]);
+    },
+  });
+}
+
+export function useEvidenceRegistry(query: EvidenceRegistryQuery) {
+  return useQuery({
+    queryKey: evidenceQueryKeys.registry(query),
+    queryFn: ({ signal }) => fetchEvidenceRegistry(query, signal),
+  });
+}
+
+export function useRegistryEvidence(evidenceId: string | null) {
+  return useQuery({
+    queryKey: evidenceQueryKeys.registryEvidence(evidenceId ?? "none"),
+    queryFn: ({ signal }) => fetchRegistryEvidence(evidenceId ?? "", signal),
+    enabled: evidenceId !== null,
+  });
+}
+
+export function useUpdateRegistryEvidence() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      evidenceId,
+      edit,
+    }: {
+      evidenceId: string;
+      edit: EvidenceRegistryEdit;
+    }) => updateRegistryEvidence(evidenceId, edit),
+    onSuccess: (evidence) => {
+      queryClient.setQueryData(
+        evidenceQueryKeys.registryEvidence(evidence.evidenceId),
+        evidence,
+      );
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: evidenceQueryKeys.registryRoot,
+      });
+    },
+  });
+}
+
+export function useChangeRegistryEvidenceLifecycle() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      evidenceId,
+      action,
+    }: {
+      evidenceId: string;
+      action: "archive" | "restore";
+    }) => changeRegistryEvidenceLifecycle(evidenceId, action),
+    onSuccess: (evidence) => {
+      queryClient.setQueryData(
+        evidenceQueryKeys.registryEvidence(evidence.evidenceId),
+        evidence,
+      );
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: evidenceQueryKeys.registryRoot,
+      });
     },
   });
 }
