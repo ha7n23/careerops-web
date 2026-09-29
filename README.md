@@ -29,8 +29,10 @@ Browser -> CareerOps Web (Module 3) -> Automation & MCP Hub (Module 2)
 - Loading, empty, error and retry states.
 - Server-only MCP and REST gateway clients with runtime contract validation.
 
-Evidence intake, human review and Evidence Registry lifecycle management are
-available. Job-analysis and final-CV delivery are the next product slice.
+Evidence intake, human review, Evidence Registry lifecycle management,
+job-analysis review and verified final-CV delivery are available. Final CV
+generation is gated on an approved or edited proposal set and exposes secure
+DOCX/PDF downloads through the server-only Module 2 boundary.
 
 ## Local development
 

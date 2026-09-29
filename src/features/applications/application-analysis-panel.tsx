@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import type { ApplicationAnalysis } from "@/features/applications/analysis-contracts";
 import { ApplicationReviewControls } from "@/features/applications/application-review-controls";
 import { ApplicationsApiError } from "@/features/applications/browser-api";
+import { FinalCvDeliveryPanel } from "@/features/final-cv/final-cv-delivery-panel";
 import {
   useApplication,
   useApplicationAnalysis,
@@ -261,6 +262,8 @@ function ApplicationAnalysisContent({ data }: { data: ApplicationAnalysis }) {
             allowedReviewActions={data.analysis.allowedReviewActions}
           />
         )}
+
+      <FinalCvDeliveryPanel analysis={data.analysis} />
     </section>
   );
 }

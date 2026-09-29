@@ -35,6 +35,15 @@ export const applicationReviewActionSchema = z.enum([
   "regenerate",
 ]);
 
+export const applicationReviewStatusSchema = z.enum([
+  "not_requested",
+  "pending",
+  "approved",
+  "edited",
+  "rejected",
+  "regeneration_requested",
+]);
+
 const requirementSchema = z.object({
   id: z.string().trim().min(1),
   name: z.string().trim().min(1),
@@ -88,7 +97,7 @@ export const agentEngineAnalysisSchema = z.object({
   reviewableProposalIds: z.array(z.string()),
   blockedProposalIds: z.array(z.string()),
   allowedReviewActions: z.array(applicationReviewActionSchema),
-  reviewStatus: z.string().nullable(),
+  reviewStatus: applicationReviewStatusSchema.nullable(),
 });
 
 export const applicationAnalysisSchema = z.object({
@@ -171,7 +180,7 @@ export const module2AgentEngineAnalysisSchema = z
     reviewable_proposal_ids: z.array(z.string()),
     blocked_proposal_ids: z.array(z.string()),
     allowed_review_actions: z.array(applicationReviewActionSchema),
-    review_status: z.string().nullable(),
+    review_status: applicationReviewStatusSchema.nullable(),
   })
   .transform((analysis) =>
     agentEngineAnalysisSchema.parse({
