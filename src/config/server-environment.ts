@@ -6,11 +6,15 @@ const optionalSecret = z.preprocess(
 );
 
 const serverEnvironmentSchema = z.object({
+  CAREEROPS_API_ACCESS_TOKEN: optionalSecret,
+  CAREEROPS_API_URL: z.string().url().default("http://127.0.0.1:8001"),
   CAREEROPS_MCP_URL: z.string().url().default("http://127.0.0.1:8001/mcp"),
   CAREEROPS_MCP_ACCESS_TOKEN: optionalSecret,
 });
 
 export type ServerEnvironment = {
+  apiAccessToken?: string;
+  apiUrl: string;
   mcpAccessToken?: string;
   mcpUrl: string;
 };
@@ -31,6 +35,8 @@ export function parseServerEnvironment(
   }
 
   return {
+    apiAccessToken: result.data.CAREEROPS_API_ACCESS_TOKEN,
+    apiUrl: result.data.CAREEROPS_API_URL,
     mcpAccessToken: result.data.CAREEROPS_MCP_ACCESS_TOKEN,
     mcpUrl: result.data.CAREEROPS_MCP_URL,
   };

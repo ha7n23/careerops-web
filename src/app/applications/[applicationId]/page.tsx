@@ -21,10 +21,10 @@ export default async function ApplicationPage({
   }
 
   return (
-    <main className="bg-muted/30 min-h-screen">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-6 py-12 sm:px-8 lg:py-16">
+    <main className="min-h-screen">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-5 py-8 sm:px-8 lg:px-10 lg:py-10">
         <Link
-          href="/"
+          href="/applications"
           className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 flex w-fit items-center gap-2 rounded-md text-sm transition-colors outline-none focus-visible:ring-3"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
