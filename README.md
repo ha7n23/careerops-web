@@ -27,8 +27,8 @@ Browser -> CareerOps Web (Module 3) -> Automation & MCP Hub (Module 2)
 - Loading, empty, error and retry states.
 - Server-only MCP and REST gateway clients with runtime contract validation.
 
-Evidence intake, the approved Evidence Registry and final-CV downloads are the
-next product slices.
+Evidence intake and human review are available. The approved Evidence Registry
+and final-CV downloads are the next product slices.
 
 ## Local development
 
@@ -59,10 +59,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The existing application workflow uses the local development MCP endpoint.
-Authenticated Module 2 REST workflows additionally require
-`CAREEROPS_API_ACCESS_TOKEN`. Both credentials stay in server-only environment
-variables and must never use a `NEXT_PUBLIC_` prefix.
+The Module 2 development launcher accepts `careerops-local-dev-token` for both
+MCP and REST requests. Both credentials stay in server-only environment
+variables and must never use a `NEXT_PUBLIC_` prefix. Deployed environments
+must replace the local token with a real user access token.
 
 ## Quality gates
 
