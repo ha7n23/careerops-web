@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  evidenceRegistryEditSchema,
   evidenceReviewDecisionSchema,
+  module2EvidenceRegistryPageSchema,
   module2EvidenceReviewSchema,
 } from "@/features/evidence/contracts";
-import { module2AwaitingEvidenceReview } from "@/test/evidence-fixtures";
+import {
+  module2AwaitingEvidenceReview,
+  module2RegistryEvidence,
+} from "@/test/evidence-fixtures";
 
 describe("evidence contracts", () => {
   it("maps the frozen Module 2 review contract to browser-safe camel case", () => {
@@ -27,5 +32,27 @@ describe("evidence contracts", () => {
         reviewerComment: null,
       }).success,
     ).toBe(false);
+  });
+
+  it("maps registry pagination and full evidence provenance", () => {
+    const page = module2EvidenceRegistryPageSchema.parse({
+      items: [module2RegistryEvidence],
+      count: 1,
+      total: 7,
+      limit: 6,
+      offset: 0,
+      has_more: true,
+    });
+
+    expect(page.hasMore).toBe(true);
+    expect(page.items[0]).toMatchObject({
+      evidenceId: "EVD-001",
+      lifecycleStatus: "active",
+      sourceReferences: [{ sourceId: "DOC-001" }],
+    });
+  });
+
+  it("rejects empty registry edits", () => {
+    expect(evidenceRegistryEditSchema.safeParse({}).success).toBe(false);
   });
 });

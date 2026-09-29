@@ -24,11 +24,13 @@ Browser -> CareerOps Web (Module 3) -> Automation & MCP Hub (Module 2)
 - Evidence-grounded job preparation and analysis recovery.
 - Human review controls for generated CV proposals.
 - Pending-action dashboard.
+- Evidence intake, durable human review and duplicate resolution.
+- Approved Evidence Registry search, filtering, editing and lifecycle control.
 - Loading, empty, error and retry states.
 - Server-only MCP and REST gateway clients with runtime contract validation.
 
-Evidence intake and human review are available. The approved Evidence Registry
-and final-CV downloads are the next product slices.
+Evidence intake, human review and Evidence Registry lifecycle management are
+available. Job-analysis and final-CV delivery are the next product slice.
 
 ## Local development
 
