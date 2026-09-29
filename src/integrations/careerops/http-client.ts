@@ -76,7 +76,7 @@ export class CareerOpsGatewayClient {
 
   async requestJson<Result>(
     path: string,
-    resultSchema: z.ZodType<Result>,
+    resultSchema: z.ZodType<Result, z.ZodTypeDef, unknown>,
     options: GatewayRequestOptions = {},
   ): Promise<Result> {
     const headers = new Headers(options.headers);
