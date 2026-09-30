@@ -27,6 +27,7 @@ Browser -> CareerOps Web (Module 3) -> Automation & MCP Hub (Module 2)
 - Evidence intake, durable human review and duplicate resolution.
 - Approved Evidence Registry search, filtering, editing and lifecycle control.
 - Loading, empty, error and retry states.
+- Route-level loading, not-found and unexpected-error recovery.
 - Server-only MCP and REST gateway clients with runtime contract validation.
 
 Evidence intake, human review, Evidence Registry lifecycle management,
@@ -40,6 +41,7 @@ Requirements:
 
 - Node.js 24
 - npm 11+
+- CareerOps Module 1 running locally on port `8000`
 - CareerOps Module 2 running locally on port `8001`
 
 Install dependencies and configure the environment:
@@ -47,6 +49,13 @@ Install dependencies and configure the environment:
 ```bash
 npm ci
 cp .env.example .env.local
+```
+
+Start Module 1 from its repository and verify its readiness endpoint:
+
+```bash
+docker compose up -d --build
+curl http://localhost:8000/ready
 ```
 
 Start Module 2 from its repository:
@@ -68,6 +77,20 @@ MCP and REST requests. Both credentials stay in server-only environment
 variables and must never use a `NEXT_PUBLIC_` prefix. Deployed environments
 must replace the local token with a real user access token.
 
+## MVP browser proof
+
+With all three modules running, prove the complete user-controlled path:
+
+1. Open **Evidence**, upload or paste career evidence and complete its review.
+2. Confirm the approved record appears in the active Evidence Registry.
+3. Create an application, prepare its job analysis and review every CV proposal.
+4. Select a source CV and generate the final version.
+5. Download both verified DOCX and PDF artifacts and open them locally.
+6. Repeat generation and confirm the existing version is reused safely.
+
+At no point should CareerOps claim that an application was submitted. Blocked or
+failed generation must not display download links.
+
 ## Quality gates
 
 ```bash
@@ -78,6 +101,11 @@ npm run build
 `npm run check` runs Prettier verification, ESLint, Next.js type generation,
 TypeScript and the Vitest suite. GitHub Actions runs both commands for every
 pull request and push to `main`.
+
+## Frozen MVP contract
+
+- [Platform architecture](docs/ARCHITECTURE.md)
+- [Module 3 MVP contract](docs/MVP_CONTRACT.md)
 
 ## Technology
 

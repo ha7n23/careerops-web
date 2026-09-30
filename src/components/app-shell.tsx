@@ -80,10 +80,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="m-4 rounded-2xl border bg-white/70 p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm font-medium">
             <ShieldCheck aria-hidden="true" className="text-primary size-4" />
-            Evidence grounded
+            Human controlled
           </div>
           <p className="text-muted-foreground mt-2 text-xs leading-5">
-            CareerOps keeps generated claims tied to evidence you approve.
+            Claims stay tied to approved evidence. CareerOps never submits an
+            application automatically.
           </p>
         </div>
       </aside>

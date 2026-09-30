@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { FinalCvApiError } from "@/features/final-cv/browser-api";
 import { FinalCvDeliveryPanel } from "@/features/final-cv/final-cv-delivery-panel";
 import { applicationAnalysisSchema } from "@/features/applications/analysis-contracts";
 import { applicationAnalysis } from "@/test/application-analysis-fixtures";
@@ -135,5 +136,58 @@ describe("FinalCvDeliveryPanel", () => {
       "href",
       "/api/cv-versions/CVV-001/artifacts/pdf",
     );
+  });
+
+  it("explains how to recover from an unavailable document service", () => {
+    useGenerateFinalCvMock.mockReturnValue({
+      mutateAsync: generate,
+      isPending: false,
+      error: new FinalCvApiError(
+        "private upstream detail",
+        503,
+        "SERVICE_UNAVAILABLE",
+      ),
+    });
+    useEvidenceDocumentsMock.mockReturnValue({
+      data: {
+        items: [
+          {
+            documentId: "DOC-CV-001",
+            originalFilename: "careerops-cv.docx",
+            documentFormat: "docx",
+            sizeBytes: 12_288,
+            status: "extracted",
+            uploadedAt: "2026-09-29T09:00:00Z",
+            updatedAt: "2026-09-29T09:01:00Z",
+          },
+        ],
+        count: 1,
+        limit: 20,
+      },
+      isPending: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    });
+
+    render(
+      <FinalCvDeliveryPanel
+        analysis={{
+          ...analysis,
+          status: "completed",
+          reviewStatus: "approved",
+        }}
+      />,
+    );
+
+    expect(
+      screen.getByText("Document generation is temporarily unavailable"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/approved review is still saved/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("private upstream detail"),
+    ).not.toBeInTheDocument();
   });
 });
