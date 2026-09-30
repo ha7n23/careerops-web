@@ -9,7 +9,8 @@ analysis, CV generation or external application submission.
 ```text
 Browser
   -> Module 3: Next.js web and browser-safe API routes
-      -> Module 2: authenticated Automation & MCP Hub
+      -> Module 2: authenticated Automation & MCP Hub REST/MCP gateway
+      -> Module 2: authenticated OpenClaw assistant gateway
           -> Module 1: Agent Engine and document pipeline
 ```
 
@@ -19,12 +20,25 @@ Browser
 | --------------- | -------------------------------------------------------- | ------------------------------------------------- |
 | Browser UI      | Forms, review decisions, loading/error states, downloads | Service credentials or direct Agent Engine access |
 | Module 3 server | Session context, input validation, response shaping      | Career evidence or workflow persistence           |
-| Module 2        | Authenticated gateway, orchestration and MCP tools       | Browser presentation                              |
+| Module 2        | REST/MCP gateway, OpenClaw orchestration and MCP tools   | Browser presentation                              |
 | Module 1        | Evidence, job analysis, review state and CV artifacts    | Web sessions or browser rendering                 |
 
-Module 3 treats Module 2 as its only service boundary. Both MCP and REST access
-tokens are server-only environment variables; no credential uses a
+Module 3 treats Module 2 as its only service boundary. MCP, REST and OpenClaw
+access tokens are server-only environment variables; no credential uses a
 `NEXT_PUBLIC_` prefix.
+
+## Assistant flow
+
+1. The browser sends bounded text to Module 3's assistant route.
+2. Module 3 assigns an opaque HttpOnly conversation cookie and calls OpenClaw's
+   authenticated Chat Completions endpoint server-to-server.
+3. OpenClaw may use only the committed CareerOps MCP tool allowlist.
+4. Module 3 validates the response contract and renders it as plain text.
+5. Starting a new conversation expires the opaque cookie; OpenClaw history is
+   never treated as authoritative business state.
+
+The gateway bearer token is a full operator credential. The OpenClaw port must
+remain on private ingress and the token must never be sent to browser code.
 
 ## Application flow
 
@@ -56,9 +70,13 @@ tokens are server-only environment variables; no credential uses a
 - Download links are shown only for artifacts reported as verified.
 - Unexpected render failures fall back to a route-level recovery screen without
   exposing internal error messages.
+- Assistant requests use bounded input, private no-store responses, an explicit
+  timeout and browser-safe error mapping.
 
 ## Deployment boundary
 
 The current local MVP uses a development access token. A deployed environment
 must replace it with an authenticated user session that supplies scoped Module
-2 credentials. Module 3 must remain the only browser-facing service.
+2 credentials and isolates the opaque assistant conversation per user. Module
+3 must remain the only browser-facing service; the OpenClaw operator endpoint
+must remain private.

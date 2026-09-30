@@ -9,6 +9,10 @@ describe("parseServerEnvironment", () => {
       apiUrl: "http://127.0.0.1:8001",
       mcpAccessToken: undefined,
       mcpUrl: "http://127.0.0.1:8001/mcp",
+      openClawAssistantModel: "openclaw/default",
+      openClawGatewayToken: undefined,
+      openClawGatewayUrl: "http://127.0.0.1:18789",
+      openClawRequestTimeoutMs: 120_000,
     });
   });
 
@@ -19,12 +23,20 @@ describe("parseServerEnvironment", () => {
         CAREEROPS_API_URL: "https://gateway.example.com",
         CAREEROPS_MCP_ACCESS_TOKEN: "test-access-token",
         CAREEROPS_MCP_URL: "https://mcp.example.com/mcp",
+        OPENCLAW_ASSISTANT_MODEL: "openclaw/careerops",
+        OPENCLAW_GATEWAY_TOKEN: "test-openclaw-token",
+        OPENCLAW_GATEWAY_URL: "https://assistant.example.com",
+        OPENCLAW_REQUEST_TIMEOUT_MS: "45000",
       }),
     ).toEqual({
       apiAccessToken: "test-api-token",
       apiUrl: "https://gateway.example.com",
       mcpAccessToken: "test-access-token",
       mcpUrl: "https://mcp.example.com/mcp",
+      openClawAssistantModel: "openclaw/careerops",
+      openClawGatewayToken: "test-openclaw-token",
+      openClawGatewayUrl: "https://assistant.example.com",
+      openClawRequestTimeoutMs: 45_000,
     });
   });
 
@@ -40,6 +52,14 @@ describe("parseServerEnvironment", () => {
     expect(() =>
       parseServerEnvironment({
         CAREEROPS_API_URL: "/api/v1",
+      }),
+    ).toThrow("Invalid server environment configuration");
+  });
+
+  it("rejects an invalid OpenClaw timeout", () => {
+    expect(() =>
+      parseServerEnvironment({
+        OPENCLAW_REQUEST_TIMEOUT_MS: "500",
       }),
     ).toThrow("Invalid server environment configuration");
   });

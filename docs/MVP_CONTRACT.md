@@ -11,6 +11,7 @@ by the CareerOps MVP.
 | `/evidence`                     | Evidence intake, review, duplicate decisions and registry lifecycle |
 | `/applications`                 | Create, filter and open applications                                |
 | `/applications/[applicationId]` | Prepare, inspect, review and generate a final CV                    |
+| `/assistant`                    | Governed conversational access to CareerOps tools                   |
 
 Invalid routes and malformed application identifiers render a safe not-found
 state. Unexpected route errors render a retryable fallback without exposing
@@ -18,25 +19,27 @@ internal exception messages.
 
 ## Backend-for-frontend routes
 
-| Method         | Route                                                       | Purpose                                     |
-| -------------- | ----------------------------------------------------------- | ------------------------------------------- |
-| `GET`, `POST`  | `/api/applications`                                         | List and create applications                |
-| `GET`          | `/api/applications/[applicationId]`                         | Retrieve durable application state          |
-| `POST`         | `/api/applications/[applicationId]/prepare`                 | Start evidence-grounded analysis            |
-| `GET`          | `/api/applications/[applicationId]/analysis`                | Recover the latest analysis                 |
-| `POST`         | `/api/applications/[applicationId]/review`                  | Submit a human proposal decision            |
-| `GET`          | `/api/actions/pending`                                      | Retrieve pending human actions              |
-| `GET`, `POST`  | `/api/evidence/documents`                                   | List, upload or paste evidence              |
-| `POST`         | `/api/evidence/documents/[documentId]/review`               | Start evidence review                       |
-| `GET`          | `/api/evidence/reviews`                                     | List durable review runs                    |
-| `GET`          | `/api/evidence/reviews/[reviewRunId]`                       | Recover one review                          |
-| `POST`         | `/api/evidence/reviews/[reviewRunId]/decision`              | Complete evidence decisions                 |
-| `GET`          | `/api/evidence/registry`                                    | Search and paginate evidence                |
-| `GET`, `PATCH` | `/api/evidence/registry/[evidenceId]`                       | Read or edit approved evidence              |
-| `POST`         | `/api/evidence/registry/[evidenceId]/lifecycle`             | Archive or restore evidence                 |
-| `POST`         | `/api/cv-versions`                                          | Generate or safely reuse a final CV version |
-| `GET`          | `/api/cv-versions/[cvVersionId]`                            | Retrieve CV version metadata                |
-| `GET`          | `/api/cv-versions/[cvVersionId]/artifacts/[artifactFormat]` | Download verified DOCX/PDF                  |
+| Method         | Route                                                       | Purpose                                       |
+| -------------- | ----------------------------------------------------------- | --------------------------------------------- |
+| `GET`, `POST`  | `/api/applications`                                         | List and create applications                  |
+| `GET`          | `/api/applications/[applicationId]`                         | Retrieve durable application state            |
+| `POST`         | `/api/applications/[applicationId]/prepare`                 | Start evidence-grounded analysis              |
+| `GET`          | `/api/applications/[applicationId]/analysis`                | Recover the latest analysis                   |
+| `POST`         | `/api/applications/[applicationId]/review`                  | Submit a human proposal decision              |
+| `GET`          | `/api/actions/pending`                                      | Retrieve pending human actions                |
+| `GET`, `POST`  | `/api/evidence/documents`                                   | List, upload or paste evidence                |
+| `POST`         | `/api/evidence/documents/[documentId]/review`               | Start evidence review                         |
+| `GET`          | `/api/evidence/reviews`                                     | List durable review runs                      |
+| `GET`          | `/api/evidence/reviews/[reviewRunId]`                       | Recover one review                            |
+| `POST`         | `/api/evidence/reviews/[reviewRunId]/decision`              | Complete evidence decisions                   |
+| `GET`          | `/api/evidence/registry`                                    | Search and paginate evidence                  |
+| `GET`, `PATCH` | `/api/evidence/registry/[evidenceId]`                       | Read or edit approved evidence                |
+| `POST`         | `/api/evidence/registry/[evidenceId]/lifecycle`             | Archive or restore evidence                   |
+| `POST`         | `/api/cv-versions`                                          | Generate or safely reuse a final CV version   |
+| `GET`          | `/api/cv-versions/[cvVersionId]`                            | Retrieve CV version metadata                  |
+| `GET`          | `/api/cv-versions/[cvVersionId]/artifacts/[artifactFormat]` | Download verified DOCX/PDF                    |
+| `POST`         | `/api/assistant/messages`                                   | Complete one stateful OpenClaw assistant turn |
+| `DELETE`       | `/api/assistant/session`                                    | Start a new isolated assistant conversation   |
 
 All private responses use `Cache-Control: private, no-store`. Browser requests
 never contain Module 1 or Module 2 service credentials.
@@ -53,6 +56,10 @@ never contain Module 1 or Module 2 service credentials.
 7. A failed or ambiguous mutation cannot be presented as successful.
 8. Cross-user isolation and source-of-truth enforcement remain upstream Module
    1 and Module 2 responsibilities and are never bypassed by Module 3.
+9. The assistant uses only the committed CareerOps OpenClaw tool allowlist;
+   conversation text never replaces durable application or evidence state.
+10. OpenClaw credentials remain server-only and assistant output is rendered as
+    plain text.
 
 ## Error contract
 
@@ -64,6 +71,7 @@ never contain Module 1 or Module 2 service credentials.
 | Upstream outage           | Preserve confirmed state and offer an explicit retry                    |
 | Invalid upstream response | Treat the operation as unconfirmed and show no success UI               |
 | Missing resource          | Render a safe not-found state                                           |
+| Free-model rate limit     | Preserve the transcript and offer an explicit retry                     |
 
 ## Deliberate MVP exclusions
 
@@ -71,6 +79,7 @@ never contain Module 1 or Module 2 service credentials.
 - Claims inferred without approved evidence.
 - OCR-only evidence extraction.
 - Client-side storage of service credentials.
+- Voice, attachments, arbitrary Markdown/HTML execution or agent selection.
 - Treating a generated file as proof that an application was submitted.
 
 ## Release proof
