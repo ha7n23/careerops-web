@@ -4,6 +4,7 @@ import {
   BriefcaseBusiness,
   Database,
   LayoutDashboard,
+  MessageSquareText,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -28,6 +29,11 @@ const navigationItems = [
     href: "/evidence",
     icon: Database,
     label: "Evidence",
+  },
+  {
+    href: "/assistant",
+    icon: MessageSquareText,
+    label: "Assistant",
   },
 ] as const;
 

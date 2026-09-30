@@ -11,7 +11,8 @@ to the Agent Engine directly and never receives private service credentials.
 
 ```text
 Browser -> CareerOps Web (Module 3) -> Automation & MCP Hub (Module 2)
-                                      -> Agent Engine (Module 1)
+                                  \-> OpenClaw assistant gateway (Module 2)
+                                                   \-> Agent Engine (Module 1)
 ```
 
 - Module 3 owns presentation, browser-safe validation and web session context.
@@ -29,6 +30,7 @@ Browser -> CareerOps Web (Module 3) -> Automation & MCP Hub (Module 2)
 - Loading, empty, error and retry states.
 - Route-level loading, not-found and unexpected-error recovery.
 - Server-only MCP and REST gateway clients with runtime contract validation.
+- Governed OpenClaw assistant workspace with durable conversation continuity.
 
 Evidence intake, human review, Evidence Registry lifecycle management,
 job-analysis review and verified final-CV delivery are available. Final CV
@@ -43,6 +45,7 @@ Requirements:
 - npm 11+
 - CareerOps Module 1 running locally on port `8000`
 - CareerOps Module 2 running locally on port `8001`
+- Module 2's OpenClaw gateway running locally on port `18789`
 
 Install dependencies and configure the environment:
 
@@ -63,6 +66,15 @@ Start Module 2 from its repository:
 ```bash
 uv run --env-file .env python scripts/run_dev_mcp_server.py
 ```
+
+Start its OpenClaw gateway after applying the committed CareerOps policy:
+
+```bash
+docker compose -f openclaw/compose.yaml up -d --wait openclaw-gateway
+```
+
+Copy Module 2's `OPENCLAW_GATEWAY_TOKEN` into Module 3's `.env.local`. The
+gateway token is an operator credential and must remain server-only.
 
 Start the web application:
 
@@ -87,6 +99,8 @@ With all three modules running, prove the complete user-controlled path:
 4. Select a source CV and generate the final version.
 5. Download both verified DOCX and PDF artifacts and open them locally.
 6. Repeat generation and confirm the existing version is reused safely.
+7. Open **Assistant**, ask it to show approved evidence or pending actions and
+   confirm its answer matches the normal workspace.
 
 At no point should CareerOps claim that an application was submitted. Blocked or
 failed generation must not display download links.

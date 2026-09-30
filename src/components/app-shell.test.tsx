@@ -31,6 +31,9 @@ describe("AppShell", () => {
       screen.getAllByRole("link", { name: "Applications" })[0],
     ).not.toHaveAttribute("aria-current");
     expect(
+      screen.getAllByRole("link", { name: "Assistant" })[0],
+    ).toHaveAttribute("href", "/assistant");
+    expect(
       screen.getByText(/never submits an application automatically/i),
     ).toBeInTheDocument();
   });
@@ -46,6 +49,20 @@ describe("AppShell", () => {
 
     expect(
       screen.getAllByRole("link", { name: "Applications" })[0],
+    ).toHaveAttribute("aria-current", "page");
+  });
+
+  it("marks the assistant workspace as active", () => {
+    usePathname.mockReturnValue("/assistant");
+
+    render(
+      <AppShell>
+        <p>Assistant workspace</p>
+      </AppShell>,
+    );
+
+    expect(
+      screen.getAllByRole("link", { name: "Assistant" })[0],
     ).toHaveAttribute("aria-current", "page");
   });
 });
