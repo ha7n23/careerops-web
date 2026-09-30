@@ -30,6 +30,9 @@ describe("AppShell", () => {
     expect(
       screen.getAllByRole("link", { name: "Applications" })[0],
     ).not.toHaveAttribute("aria-current");
+    expect(
+      screen.getByText(/never submits an application automatically/i),
+    ).toBeInTheDocument();
   });
 
   it("marks nested application routes as active", () => {

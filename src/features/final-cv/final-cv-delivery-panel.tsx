@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import type { ApplicationAnalysis } from "@/features/applications/analysis-contracts";
 import { useEvidenceDocuments } from "@/features/evidence/use-evidence";
 import type { FinalCvVersion } from "@/features/final-cv/contracts";
+import { presentFinalCvError } from "@/features/final-cv/presentation";
 import { useGenerateFinalCv } from "@/features/final-cv/use-final-cv";
 
 type FinalCvDeliveryPanelProps = {
@@ -85,6 +86,9 @@ function ApprovedFinalCvDelivery({ analysis }: FinalCvDeliveryPanelProps) {
     selectedDocumentId === ""
       ? (sourceDocuments[0]?.documentId ?? "")
       : selectedDocumentId;
+
+  const errorPresentation =
+    generation.error === null ? null : presentFinalCvError(generation.error);
 
   async function generate() {
     if (effectiveDocumentId === "") {
@@ -210,20 +214,22 @@ function ApprovedFinalCvDelivery({ analysis }: FinalCvDeliveryPanelProps) {
         </div>
       )}
 
-      {generation.error !== null && (
+      {errorPresentation !== null && (
         <div
           role="alert"
+          aria-live="assertive"
           className="border-destructive/20 bg-destructive/5 mt-5 flex items-start gap-3 rounded-xl border p-4"
         >
           <CircleAlert
             aria-hidden="true"
             className="text-destructive mt-0.5 size-4 shrink-0"
           />
-          <p className="text-sm leading-6">
-            The final CV could not be confirmed. No application was submitted
-            and no download should be assumed complete. Check the workflow and
-            retry safely.
-          </p>
+          <div>
+            <p className="text-sm font-medium">{errorPresentation.title}</p>
+            <p className="text-muted-foreground mt-1 text-sm leading-6">
+              {errorPresentation.description}
+            </p>
+          </div>
         </div>
       )}
 
